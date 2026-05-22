@@ -54,6 +54,68 @@ public class JsonCheckInArchive
         }
     }
 
+    public ImportResult Import(string path)
+    {
+        if (!File.Exists(path))
+        {
+            throw new ImportException("I couldn't find a file at that path.");
+        }
+
+        ExportDocumentDto? document;
+        try
+        {
+            var json = File.ReadAllText(path);
+            document = JsonSerializer.Deserialize<ExportDocumentDto>(json, Options);
+        }
+        catch (JsonException)
+        {
+            throw new ImportException("That file isn't a readable Kenaz export.");
+        }
+        catch (IOException)
+        {
+            throw new ImportException("I couldn't read that file — check the path and try again.");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            throw new ImportException("I don't have permission to read that file.");
+        }
+
+        if (document is null)
+        {
+            throw new ImportException("That file isn't a readable Kenaz export.");
+        }
+
+        if (document.SchemaVersion > CurrentSchemaVersion)
+        {
+            throw new ImportException("That export was made by a newer version of Kenaz.");
+        }
+
+        var records = new List<CheckIn>();
+        var seenDates = new HashSet<DateOnly>();
+        var skipped = 0;
+
+        foreach (var dto in document.CheckIns ?? new List<CheckInDto>())
+        {
+            if (seenDates.Contains(dto.Date))
+            {
+                continue;
+            }
+
+            try
+            {
+                var checkIn = new CheckIn(dto.Date, dto.Mood, dto.Energy, dto.Sleep, dto.Note, dto.CreatedAt, dto.UpdatedAt);
+                records.Add(checkIn);
+                seenDates.Add(dto.Date);
+            }
+            catch (ArgumentException)
+            {
+                skipped++;
+            }
+        }
+
+        return new ImportResult(records, skipped);
+    }
+
     private static CheckInDto ToDto(CheckIn checkIn)
     {
         return new CheckInDto
