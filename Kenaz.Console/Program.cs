@@ -35,11 +35,14 @@ internal static class Program
                 case "3":
                     ShowHistory(journal);
                     break;
+                case "4":
+                    ExportCheckIns(journal);
+                    break;
                 case "0":
                     running = false;
                     break;
                 default:
-                    WriteLine("I didn't catch that — please choose 1, 2, 3, or 0.");
+                    WriteLine("I didn't catch that — please choose 1, 2, 3, 4, or 0.");
                     break;
             }
         }
@@ -55,6 +58,7 @@ internal static class Program
         WriteLine("  1) Check in for today");
         WriteLine("  2) Today vs your last 7 days");
         WriteLine("  3) See your history");
+        WriteLine("  4) Export your check-ins");
         WriteLine("  0) Exit");
         Write("> ");
     }
@@ -130,6 +134,34 @@ internal static class Program
             {
                 WriteLine($"               note: {checkIn.Note}");
             }
+        }
+    }
+
+    private static void ExportCheckIns(WellbeingJournal journal)
+    {
+        var checkIns = journal.History();
+
+        WriteLine();
+        if (checkIns.Count == 0)
+        {
+            WriteLine("There's nothing to export yet — check in first, then your data is yours to take.");
+            return;
+        }
+
+        var now = DateTimeOffset.Now;
+        var path = JsonCheckInArchive.DefaultExportPath(now);
+
+        WriteLine("Heads up: the export file is unencrypted — keep it somewhere private.");
+
+        try
+        {
+            new JsonCheckInArchive().Export(path, checkIns, now);
+            WriteLine($"Saved {checkIns.Count} check-in(s) to:");
+            WriteLine($"  {path}");
+        }
+        catch (IOException)
+        {
+            WriteLine("I couldn't write the file just now — check the folder and try again.");
         }
     }
 
