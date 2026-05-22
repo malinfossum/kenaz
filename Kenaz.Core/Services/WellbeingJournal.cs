@@ -45,4 +45,78 @@ public class WellbeingJournal
             .OrderByDescending(c => c.Date)
             .ToList();
     }
+
+    /// <summary>The check-ins from the window of <paramref name="days"/> calendar days ending today, newest first.</summary>
+    public IReadOnlyList<CheckIn> Last7Days(DateTimeOffset now)
+    {
+        var today = Today(now);
+        var start = today.AddDays(-6);
+
+        return _repository.LoadAll()
+            .Where(c => c.Date >= start && c.Date <= today)
+            .OrderByDescending(c => c.Date)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Average of the selected field across the window of <paramref name="days"/> days ending today.
+    /// Null values are skipped; returns null when the window has no values (never averages an empty set).
+    /// </summary>
+    public decimal? Average(Func<CheckIn, decimal?> selector, int days, DateTimeOffset now)
+    {
+        var today = Today(now);
+        var start = today.AddDays(-(days - 1));
+
+        // The nullable-decimal Average overload skips nulls and returns null for an empty
+        // window, so a skipped field never counts as zero and an empty window never throws.
+        return _repository.LoadAll()
+            .Where(c => c.Date >= start && c.Date <= today)
+            .Select(selector)
+            .Average();
+    }
+
+    /// <summary>
+    /// Consecutive logged days, counted back from the most recent logged day. An unlogged today
+    /// is not a miss; a single gap is forgiven; two missed days in a row end the streak.
+    /// </summary>
+    public int StreakDays(DateTimeOffset now)
+    {
+        var today = Today(now);
+        var logged = _repository.LoadAll()
+            .Select(c => c.Date)
+            .Where(date => date <= today)
+            .ToHashSet();
+
+        if (logged.Count == 0)
+        {
+            return 0;
+        }
+
+        var cursor = logged.Max();
+        var streak = 0;
+
+        while (true)
+        {
+            if (logged.Contains(cursor))
+            {
+                streak++;
+                cursor = cursor.AddDays(-1);
+            }
+            else if (logged.Contains(cursor.AddDays(-1)))
+            {
+                cursor = cursor.AddDays(-1);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return streak;
+    }
+
+    private static DateOnly Today(DateTimeOffset now)
+    {
+        return DateOnly.FromDateTime(now.LocalDateTime);
+    }
 }
