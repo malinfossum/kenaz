@@ -2,7 +2,7 @@
 
 A private, local-first daily wellbeing check-in: log mood, energy, and sleep, and see your patterns over time. *Bring it into the light.*
 
-C# solution with a domain core, a console front-end, and an NUnit test project — growing along the Emne 3 curriculum toward a SQLite store, an ASP.NET Minimal API, and a mobile-first PWA.
+C# solution with a domain core, a console front-end, and an NUnit test project — growing toward a SQLite store, an ASP.NET Minimal API, and a mobile-first PWA.
 
 ## Projects
 
@@ -19,3 +19,7 @@ dotnet run --project Kenaz.Console
 ```
 
 Design spec: `docs/superpowers/specs/2026-05-21-kenaz-design.md`
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE).

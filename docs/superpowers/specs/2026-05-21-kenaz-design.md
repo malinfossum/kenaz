@@ -1,19 +1,19 @@
 # Kenaz — Design Spec & Roadmap
 
-A private, mobile-first daily wellbeing check-in built in C#, grown milestone-by-milestone along the Emne 3 curriculum.
+A private, mobile-first daily wellbeing check-in built in C#, grown milestone by milestone.
 
 ---
 
 ## Context
 
-Malin (career-changer, sosionom → developer, GET Academy Emne 3 / C#) wants a *personal* C# project that is meaningful, genuinely useful to her and others, buildable and improvable over time, and impressive to a future employer. This spec is the outcome of a brainstorming session. Key decisions reached:
+Malin (career-changer, sosionom → developer) wants a *personal* C# project that is meaningful, genuinely useful to her and others, buildable and improvable over time, and impressive to a future employer. This spec is the outcome of a brainstorming session. Key decisions reached:
 
 - **Not a rewrite of Ignite.** Ignite is her working, mid-flight, local-first ADHD task PWA (vanilla JS, IndexedDB). C# is the wrong tool for a local-first PWA, and rewriting working software kills momentum and splits focus. Ignite stays JS and keeps marching.
 - **Build the one wellbeing dimension Ignite deliberately omits:** a **daily wellbeing check-in**. It complements Ignite rather than competing, and can integrate later.
 - **The saturation risk is answered by the differentiator.** The wellbeing-tracker space is crowded and most apps die from passive data nobody reads (e.g. unread smartwatch stats). Kenaz's edge is **compassionate, anti-shame, social-work-informed reflection** — surfacing insight the user will actually look at and act on, which automatic trackers (watch, Flo) structurally cannot provide.
 - **Success bar:** *a tool Malin actually uses + a strong fullstack C# portfolio piece.* External adoption is a bonus, not the test — so "does the world need another tracker?" does not gate the project.
 
-**Intended outcome:** a private, mobile-first wellbeing companion built along the curriculum spine (Core → console → JSON → SQLite → ASP.NET API → PWA frontend) that reinforces every Emne 3 module and ends as an impressive fullstack project tying her two project worlds together.
+**Intended outcome:** a private, mobile-first wellbeing companion built along a clear technical spine (Core → console → JSON → SQLite → ASP.NET API → PWA frontend) that ends as an impressive fullstack project tying her two project worlds together.
 
 **Name:** **Kenaz** — the Elder Futhark torch rune, *"to kindle, to bring into the light."* Fire-family sibling to Ignite ("a small flame, kept going"); verified GitHub-clean and cross-language safe. Tagline: **"bring it into the light."**
 
@@ -73,16 +73,16 @@ Local-first, single-user, no accounts, no telemetry. When the API arrives it sta
 
 ---
 
-## Milestone roadmap (each shippable; maps to Emne 3)
+## Milestone roadmap (each shippable)
 
-| Milestone | Delivers | Reinforces |
-|---|---|---|
-| **M1** | Core + console + NUnit tests + minimal JSON persistence (**atomic writes + corrupt-file recovery**) → a usable daily tool (add/edit today, history, today-vs-7-day view + streak) | OOP + NUnit |
-| **M2** | Repository interface formalized + JSON export/import (**validated import; plaintext-export warning**) + error handling | File IO / JSON (Uke 4) |
-| **M3** | Insights: weekly review, averages, gentle streak, first correlation (pure functions) | Testable logic; LINQ later |
-| **M4** | Swap JSON → SQLite behind the same interface — **migrating existing data (never dropped); JSON kept as a backup** | SQL (Uke 5–6) |
-| **M5** | ASP.NET Minimal API over the data (loopback-only) | API (Uke 5) |
-| **M6** | Mobile-first PWA frontend (vanilla JS + design-system) consuming the API; **local-notification** reminders; goal onboarding; entry delete + undo; app-lock; crisis resources; Ignite sync (via stable contract). **Escape all user text on render (XSS).** **A11y:** accessible scale inputs (not bare sliders, ≥44px), keyboard-reachable toggles w/ `aria-pressed`, `aria-live` for conditional prompts, `prefers-reduced-motion`, design-system contrast | Fetch / fullstack |
+| Milestone | Delivers |
+|---|---|
+| **M1** | Core + console + NUnit tests + minimal JSON persistence (**atomic writes + corrupt-file recovery**) → a usable daily tool (add/edit today, history, today-vs-7-day view + streak) |
+| **M2** | Repository interface formalized + JSON export/import (**validated import; plaintext-export warning**) + error handling |
+| **M3** | Insights: weekly review, averages, gentle streak, first correlation (pure functions) |
+| **M4** | Swap JSON → SQLite behind the same interface — **migrating existing data (never dropped); JSON kept as a backup** |
+| **M5** | ASP.NET Minimal API over the data (loopback-only) |
+| **M6** | Mobile-first PWA frontend (vanilla JS + design-system) consuming the API; **local-notification** reminders; goal onboarding; entry delete + undo; app-lock; crisis resources; Ignite sync (via stable contract). **Escape all user text on render (XSS).** **A11y:** accessible scale inputs (not bare sliders, ≥44px), keyboard-reachable toggles w/ `aria-pressed`, `aria-live` for conditional prompts, `prefers-reduced-motion`, design-system contrast |
 
 The storage-behind-an-interface move (M2/M4) is the repository pattern Malin already knows from Ignite — swap implementations, domain untouched.
 
