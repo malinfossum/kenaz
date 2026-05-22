@@ -34,6 +34,41 @@ public class WellbeingJournal
         return existing;
     }
 
+    /// <summary>
+    /// Folds imported check-ins into the store, keyed by date. A new date is added; an existing date is
+    /// replaced only when the incoming record is more recently updated; otherwise it is left unchanged.
+    /// Imported timestamps are preserved (this never routes through <see cref="AddOrUpdate"/>).
+    /// </summary>
+    public MergeResult Merge(IReadOnlyList<CheckIn> incoming)
+    {
+        var byDate = _repository.LoadAll().ToDictionary(c => c.Date);
+
+        var added = 0;
+        var updated = 0;
+        var unchanged = 0;
+
+        foreach (var candidate in incoming)
+        {
+            if (!byDate.TryGetValue(candidate.Date, out var existing))
+            {
+                byDate[candidate.Date] = candidate;
+                added++;
+            }
+            else if (candidate.UpdatedAt > existing.UpdatedAt)
+            {
+                byDate[candidate.Date] = candidate;
+                updated++;
+            }
+            else
+            {
+                unchanged++;
+            }
+        }
+
+        _repository.SaveAll(byDate.Values.ToList());
+        return new MergeResult(added, updated, unchanged);
+    }
+
     public CheckIn? GetByDate(DateOnly date)
     {
         return _repository.LoadAll().FirstOrDefault(c => c.Date == date);

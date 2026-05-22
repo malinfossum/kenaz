@@ -90,4 +90,40 @@ public class WellbeingJournalTests
         Assert.That(history[1].Date, Is.EqualTo(Day.AddDays(-1)));
         Assert.That(history[2].Date, Is.EqualTo(Day.AddDays(-2)));
     }
+
+    [Test]
+    public void Merge_adds_check_ins_for_new_dates()
+    {
+        var day = Day.AddDays(-2);
+        var incoming = new[] { new CheckIn(day, mood: 5, energy: null, sleep: null, note: null, createdAt: _clock, updatedAt: _clock) };
+
+        var result = _journal.Merge(incoming);
+
+        Assert.That(result.Added, Is.EqualTo(1));
+        Assert.That(_journal.GetByDate(day), Is.Not.Null);
+    }
+
+    [Test]
+    public void Merge_updates_when_incoming_is_newer()
+    {
+        _journal.AddOrUpdate(Day, mood: 3, energy: null, sleep: null, note: null);
+        var newer = new CheckIn(Day, mood: 9, energy: null, sleep: null, note: null, createdAt: _clock, updatedAt: _clock.AddHours(1));
+
+        var result = _journal.Merge(new[] { newer });
+
+        Assert.That(result.Updated, Is.EqualTo(1));
+        Assert.That(_journal.GetByDate(Day)!.Mood, Is.EqualTo(9));
+    }
+
+    [Test]
+    public void Merge_keeps_existing_when_incoming_is_older()
+    {
+        _journal.AddOrUpdate(Day, mood: 3, energy: null, sleep: null, note: null);
+        var older = new CheckIn(Day, mood: 9, energy: null, sleep: null, note: null, createdAt: _clock, updatedAt: _clock.AddHours(-1));
+
+        var result = _journal.Merge(new[] { older });
+
+        Assert.That(result.Unchanged, Is.EqualTo(1));
+        Assert.That(_journal.GetByDate(Day)!.Mood, Is.EqualTo(3));
+    }
 }
