@@ -46,7 +46,7 @@ public class WellbeingJournal
             .ToList();
     }
 
-    /// <summary>The check-ins from the window of <paramref name="days"/> calendar days ending today, newest first.</summary>
+    /// <summary>The check-ins from the 7 calendar days ending today (today and the six days before), newest first.</summary>
     public IReadOnlyList<CheckIn> Last7Days(DateTimeOffset now)
     {
         var today = Today(now);
