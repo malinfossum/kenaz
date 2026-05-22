@@ -38,11 +38,14 @@ internal static class Program
                 case "4":
                     ExportCheckIns(journal);
                     break;
+                case "5":
+                    ImportCheckIns(journal);
+                    break;
                 case "0":
                     running = false;
                     break;
                 default:
-                    WriteLine("I didn't catch that — please choose 1, 2, 3, 4, or 0.");
+                    WriteLine("I didn't catch that — please choose 1, 2, 3, 4, 5, or 0.");
                     break;
             }
         }
@@ -59,6 +62,7 @@ internal static class Program
         WriteLine("  2) Today vs your last 7 days");
         WriteLine("  3) See your history");
         WriteLine("  4) Export your check-ins");
+        WriteLine("  5) Import check-ins");
         WriteLine("  0) Exit");
         Write("> ");
     }
@@ -162,6 +166,37 @@ internal static class Program
         catch (IOException)
         {
             WriteLine("I couldn't write the file just now — check the folder and try again.");
+        }
+    }
+
+    private static void ImportCheckIns(WellbeingJournal journal)
+    {
+        WriteLine();
+        Write("Path to the export file you want to bring in: ");
+        var path = ReadLine();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            WriteLine("No path given — nothing imported.");
+            return;
+        }
+
+        ImportResult result;
+        try
+        {
+            result = new JsonCheckInArchive().Import(path.Trim().Trim('"'));
+        }
+        catch (ImportException ex)
+        {
+            WriteLine(ex.Message);
+            return;
+        }
+
+        var merge = journal.Merge(result.Records);
+
+        WriteLine($"Brought in {merge.Added} new day(s), updated {merge.Updated}, left {merge.Unchanged} unchanged.");
+        if (result.Skipped > 0)
+        {
+            WriteLine($"Skipped {result.Skipped} entry(ies) I couldn't read.");
         }
     }
 
