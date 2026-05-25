@@ -116,7 +116,7 @@ Start by copying `_template/csharp-console-mvc/` (Core / Console / Tests; net10.
 
 - `dotnet build` clean (0 warnings / 0 errors).
 - `dotnet test` — all NUnit tests pass. Each insight helper has a failing test first (TDD), then green.
-- `dotnet run --project Kenaz.Console`: manually verify check-in → edit-today (no duplicate) → 7-day view + streak → history → **data persists across a restart**. Also verify: a check-in with a **skipped scale doesn't skew averages**; a **backdated entry edits the right day**; a **corrupted JSON file is recovered (backed up)** rather than crashing. Use `"console": "integratedTerminal"` in `.vscode/launch.json` and create `Properties/launchSettings.json` (per the VS 2026 note).
+- `dotnet run --project Kenaz.Console`: manually verify check-in → edit-today (no duplicate) → 7-day view + streak → history → **data persists across a restart**. Also verify: a check-in with a **skipped scale doesn't skew averages**; a **backdated entry edits the right day**; a **corrupted JSON file is recovered (backed up)** rather than crashing. Run it from Rider (or `dotnet run`) — no editor-specific launch setup needed.
 - MVC separation holds: `Kenaz.Core` has zero `Console`/file calls outside the repository implementation (grep to confirm).
 
 ---
