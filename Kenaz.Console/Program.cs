@@ -123,6 +123,22 @@ internal static class Program
         WriteLine($"  Sleep    today {Hours(todayCheckIn?.Sleep)}    7-day avg {AverageHours(journal.Average(c => c.Sleep, 7, now))}");
         WriteLine();
         WriteLine(StreakMessage(journal.StreakDays(now)));
+
+        var pattern = journal.SleepMoodPattern(30, WellbeingJournal.DefaultSleepThresholdHours, now);
+        if (pattern.IsConfident)
+        {
+            var gap = pattern.LongSleepMoodAverage!.Value - pattern.ShortSleepMoodAverage!.Value;
+            if (gap >= 1.0m)
+            {
+                WriteLine();
+                WriteLine("A small pattern: you've felt better on nights with more sleep. Open Weekly review for more.");
+            }
+            else if (gap <= -1.0m)
+            {
+                WriteLine();
+                WriteLine("A small pattern: you've felt better on shorter-sleep nights. Open Weekly review for more.");
+            }
+        }
     }
 
     private static void ShowHistory(WellbeingJournal journal)
