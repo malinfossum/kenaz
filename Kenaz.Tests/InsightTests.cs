@@ -119,4 +119,94 @@ public class InsightTests
 
         Assert.That(_journal.StreakDays(Now), Is.EqualTo(1));
     }
+
+    [Test]
+    public void BestDay_returns_null_when_window_is_empty()
+    {
+        var best = _journal.BestDay(c => c.Mood, days: 7, now: Now);
+
+        Assert.That(best, Is.Null);
+    }
+
+    [Test]
+    public void BestDay_returns_null_when_no_day_in_window_has_the_selected_field()
+    {
+        Log(Today, note: "note only");
+        Log(Today.AddDays(-1), note: "note only");
+
+        var best = _journal.BestDay(c => c.Mood, days: 7, now: Now);
+
+        Assert.That(best, Is.Null);
+    }
+
+    [Test]
+    public void BestDay_picks_the_day_with_the_max_value()
+    {
+        Log(Today, mood: 5);
+        Log(Today.AddDays(-1), mood: 9);
+        Log(Today.AddDays(-2), mood: 3);
+
+        var best = _journal.BestDay(c => c.Mood, days: 7, now: Now);
+
+        Assert.That(best!.Date, Is.EqualTo(Today.AddDays(-1)));
+    }
+
+    [Test]
+    public void BestDay_ignores_days_where_the_selector_is_null()
+    {
+        Log(Today, mood: 5);
+        Log(Today.AddDays(-1), note: "no mood today-1");
+        Log(Today.AddDays(-2), mood: 7);
+
+        var best = _journal.BestDay(c => c.Mood, days: 7, now: Now);
+
+        Assert.That(best!.Date, Is.EqualTo(Today.AddDays(-2)));
+    }
+
+    [Test]
+    public void BestDay_tie_breaker_picks_the_most_recent_date()
+    {
+        Log(Today.AddDays(-3), mood: 7);
+        Log(Today.AddDays(-1), mood: 7);
+        Log(Today.AddDays(-2), mood: 7);
+
+        var best = _journal.BestDay(c => c.Mood, days: 7, now: Now);
+
+        Assert.That(best!.Date, Is.EqualTo(Today.AddDays(-1)));
+    }
+
+    [Test]
+    public void BestDay_excludes_the_seventh_day_back()
+    {
+        Log(Today.AddDays(-7), mood: 9);
+        Log(Today.AddDays(-1), mood: 3);
+
+        var best = _journal.BestDay(c => c.Mood, days: 7, now: Now);
+
+        Assert.That(best!.Date, Is.EqualTo(Today.AddDays(-1)));
+    }
+
+    [Test]
+    public void WorstDay_picks_the_day_with_the_min_value()
+    {
+        Log(Today, mood: 5);
+        Log(Today.AddDays(-1), mood: 3);
+        Log(Today.AddDays(-2), mood: 9);
+
+        var worst = _journal.WorstDay(c => c.Mood, days: 7, now: Now);
+
+        Assert.That(worst!.Date, Is.EqualTo(Today.AddDays(-1)));
+    }
+
+    [Test]
+    public void WorstDay_tie_breaker_picks_the_most_recent_date()
+    {
+        Log(Today.AddDays(-3), mood: 2);
+        Log(Today.AddDays(-1), mood: 2);
+        Log(Today.AddDays(-2), mood: 2);
+
+        var worst = _journal.WorstDay(c => c.Mood, days: 7, now: Now);
+
+        Assert.That(worst!.Date, Is.EqualTo(Today.AddDays(-1)));
+    }
 }

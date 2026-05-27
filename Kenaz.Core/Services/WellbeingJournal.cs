@@ -111,6 +111,40 @@ public class WellbeingJournal
     }
 
     /// <summary>
+    /// The day in the window with the highest value of <paramref name="selector"/>, or null if no
+    /// day in the window has a value. Tie-breaker: most recent date wins.
+    /// </summary>
+    public CheckIn? BestDay(Func<CheckIn, decimal?> selector, int days, DateTimeOffset now)
+    {
+        var today = Today(now);
+        var start = today.AddDays(-(days - 1));
+
+        return _repository.LoadAll()
+            .Where(c => c.Date >= start && c.Date <= today)
+            .Where(c => selector(c).HasValue)
+            .OrderByDescending(c => selector(c)!.Value)
+            .ThenByDescending(c => c.Date)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// The day in the window with the lowest value of <paramref name="selector"/>, or null if no
+    /// day in the window has a value. Tie-breaker: most recent date wins (same as <see cref="BestDay"/>).
+    /// </summary>
+    public CheckIn? WorstDay(Func<CheckIn, decimal?> selector, int days, DateTimeOffset now)
+    {
+        var today = Today(now);
+        var start = today.AddDays(-(days - 1));
+
+        return _repository.LoadAll()
+            .Where(c => c.Date >= start && c.Date <= today)
+            .Where(c => selector(c).HasValue)
+            .OrderBy(c => selector(c)!.Value)
+            .ThenByDescending(c => c.Date)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
     /// Consecutive logged days, counted back from the most recent logged day. An unlogged today
     /// is not a miss; a single gap is forgiven; two missed days in a row end the streak.
     /// </summary>
