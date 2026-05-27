@@ -18,7 +18,7 @@ dotnet test Kenaz.slnx
 dotnet run --project Kenaz.Console
 ```
 
-In the app you can check in for today (mood, energy, sleep, and a note — each optional), see today against your last 7 days with a gentle streak, browse your history, and export or import your check-ins.
+In the app you can check in for today (mood, energy, sleep, and a note — each optional), see today against your last 7 days with a gentle streak, open a weekly review (brightest and hardest day, plus a small sleep–mood pattern when there's enough data), browse your history, and export or import your check-ins.
 
 ## Data
 
