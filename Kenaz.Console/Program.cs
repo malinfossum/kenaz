@@ -8,6 +8,8 @@ internal static class Program
 {
     private static void Main()
     {
+        System.Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         var repository = new JsonCheckInRepository(JsonCheckInRepository.DefaultFilePath());
         var journal = new WellbeingJournal(repository, () => DateTimeOffset.Now);
 
