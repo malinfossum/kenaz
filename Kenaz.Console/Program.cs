@@ -43,11 +43,14 @@ internal static class Program
                 case "5":
                     ImportCheckIns(journal);
                     break;
+                case "6":
+                    ShowWeeklyReview(journal);
+                    break;
                 case "0":
                     running = false;
                     break;
                 default:
-                    WriteLine("I didn't catch that — please choose 1, 2, 3, 4, 5, or 0.");
+                    WriteLine("I didn't catch that — please choose 1, 2, 3, 4, 5, 6, or 0.");
                     break;
             }
         }
@@ -65,6 +68,7 @@ internal static class Program
         WriteLine("  3) See your history");
         WriteLine("  4) Export your check-ins");
         WriteLine("  5) Import check-ins");
+        WriteLine("  6) Weekly review");
         WriteLine("  0) Exit");
         Write("> ");
     }
@@ -141,6 +145,54 @@ internal static class Program
                 WriteLine($"               note: {checkIn.Note}");
             }
         }
+    }
+
+    private static void ShowWeeklyReview(WellbeingJournal journal)
+    {
+        var now = DateTimeOffset.Now;
+        var weekDays = journal.Last7Days(now);
+
+        WriteLine();
+        if (weekDays.Count == 0)
+        {
+            WriteLine("Not enough check-ins yet — your weekly review will appear here once you've logged a few days.");
+            return;
+        }
+
+        WriteLine("Your week");
+        WriteLine($"  Mood     avg {Average(journal.Average(c => c.Mood, 7, now))}   (last 7 days)");
+        WriteLine($"  Energy   avg {Average(journal.Average(c => c.Energy, 7, now))}");
+        WriteLine($"  Sleep    avg {AverageHours(journal.Average(c => c.Sleep, 7, now))}");
+        WriteLine($"  {StreakMessage(journal.StreakDays(now))}");
+
+        var brightest = journal.BestDay(c => c.Mood, 7, now);
+        var hardest = journal.WorstDay(c => c.Mood, 7, now);
+        if (brightest is not null && hardest is not null && brightest.Date != hardest.Date)
+        {
+            WriteLine();
+            WriteLine($"  Brightest day  {FormatDay(brightest)}    mood {Scale(brightest.Mood)}   energy {Scale(brightest.Energy)}   sleep {Hours(brightest.Sleep)}");
+            WriteLine($"  Hardest day    {FormatDay(hardest)}     mood {Scale(hardest.Mood)}   energy {Scale(hardest.Energy)}   sleep {Hours(hardest.Sleep)}");
+        }
+
+        WriteLine();
+        WriteLine("A small pattern");
+        var pattern = journal.SleepMoodPattern(30, WellbeingJournal.DefaultSleepThresholdHours, now);
+        if (pattern.IsConfident)
+        {
+            var longAvg = pattern.LongSleepMoodAverage!.Value;
+            var shortAvg = pattern.ShortSleepMoodAverage!.Value;
+            WriteLine($"  On nights you slept ≥{pattern.Threshold:0.#} h, your mood averaged {longAvg:0.0} — vs {shortAvg:0.0} on shorter nights.");
+            WriteLine($"  (last 30 days: {pattern.LongSleepDays} longer-sleep days, {pattern.ShortSleepDays} shorter)");
+        }
+        else
+        {
+            WriteLine("  Not enough sleep + mood data yet — keep logging both and the pattern will show up here.");
+        }
+    }
+
+    private static string FormatDay(CheckIn checkIn)
+    {
+        return checkIn.Date.ToString("dddd yyyy-MM-dd", CultureInfo.CurrentCulture);
     }
 
     private static void ExportCheckIns(WellbeingJournal journal)
