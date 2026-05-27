@@ -6,6 +6,12 @@ namespace Kenaz.Core;
 /// </summary>
 public class WellbeingJournal
 {
+    /// <summary>The default sleep-hours threshold used by the bucket compare. View passes this in.</summary>
+    public const decimal DefaultSleepThresholdHours = 7m;
+
+    /// <summary>Minimum qualified days in each sleep bucket before the pattern is considered confident.</summary>
+    public const int MinDaysPerBucketForConfidence = 5;
+
     private readonly ICheckInRepository _repository;
     private readonly Func<DateTimeOffset> _now;
 
@@ -142,6 +148,33 @@ public class WellbeingJournal
             .OrderBy(c => selector(c)!.Value)
             .ThenByDescending(c => c.Date)
             .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// A bucket-compare of mood across qualified days (mood AND sleep present) in the window, split
+    /// at <paramref name="thresholdHours"/> (≥ vs &lt;). Confidence requires at least
+    /// <see cref="MinDaysPerBucketForConfidence"/> qualified days in each bucket.
+    /// </summary>
+    public SleepMoodPattern SleepMoodPattern(int days, decimal thresholdHours, DateTimeOffset now)
+    {
+        var today = Today(now);
+        var start = today.AddDays(-(days - 1));
+
+        var qualifiedDays = _repository.LoadAll()
+            .Where(c => c.Date >= start && c.Date <= today)
+            .Where(c => c.Mood.HasValue && c.Sleep.HasValue)
+            .ToList();
+
+        var longSleep = qualifiedDays.Where(c => c.Sleep!.Value >= thresholdHours).ToList();
+        var shortSleep = qualifiedDays.Where(c => c.Sleep!.Value < thresholdHours).ToList();
+
+        var longAvg = longSleep.Select(c => (decimal?)c.Mood).Average();
+        var shortAvg = shortSleep.Select(c => (decimal?)c.Mood).Average();
+
+        var isConfident = longSleep.Count >= MinDaysPerBucketForConfidence
+                       && shortSleep.Count >= MinDaysPerBucketForConfidence;
+
+        return new SleepMoodPattern(thresholdHours, longSleep.Count, shortSleep.Count, longAvg, shortAvg, isConfident);
     }
 
     /// <summary>

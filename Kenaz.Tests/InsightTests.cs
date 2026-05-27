@@ -209,4 +209,104 @@ public class InsightTests
 
         Assert.That(worst!.Date, Is.EqualTo(Today.AddDays(-1)));
     }
+
+    [Test]
+    public void SleepMoodPattern_returns_zeros_and_nulls_on_empty_window()
+    {
+        var pattern = _journal.SleepMoodPattern(days: 30, thresholdHours: 7m, now: Now);
+
+        Assert.That(pattern.LongSleepDays, Is.EqualTo(0));
+        Assert.That(pattern.ShortSleepDays, Is.EqualTo(0));
+        Assert.That(pattern.LongSleepMoodAverage, Is.Null);
+        Assert.That(pattern.ShortSleepMoodAverage, Is.Null);
+        Assert.That(pattern.IsConfident, Is.False);
+    }
+
+    [Test]
+    public void SleepMoodPattern_excludes_days_missing_either_sleep_or_mood()
+    {
+        Log(Today, mood: 7, sleep: 8m);                  // qualified, long
+        Log(Today.AddDays(-1), mood: 5);                  // mood only — excluded
+        Log(Today.AddDays(-2), sleep: 8m);                // sleep only — excluded
+        Log(Today.AddDays(-3), note: "neither");          // excluded
+
+        var pattern = _journal.SleepMoodPattern(days: 30, thresholdHours: 7m, now: Now);
+
+        Assert.That(pattern.LongSleepDays, Is.EqualTo(1));
+        Assert.That(pattern.ShortSleepDays, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void SleepMoodPattern_buckets_at_thresholdHours_with_inclusive_lower_bound()
+    {
+        Log(Today, mood: 7, sleep: 7m);                   // exactly threshold → long
+        Log(Today.AddDays(-1), mood: 6, sleep: 6.99m);    // below threshold → short
+
+        var pattern = _journal.SleepMoodPattern(days: 30, thresholdHours: 7m, now: Now);
+
+        Assert.That(pattern.LongSleepDays, Is.EqualTo(1));
+        Assert.That(pattern.ShortSleepDays, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void SleepMoodPattern_is_not_confident_when_long_bucket_is_one_below_the_floor()
+    {
+        // 4 long + 5 short (4 = MinDaysPerBucketForConfidence - 1)
+        for (var i = 0; i < 4; i++)
+        {
+            Log(Today.AddDays(-i), mood: 7, sleep: 8m);
+        }
+        for (var i = 4; i < 9; i++)
+        {
+            Log(Today.AddDays(-i), mood: 5, sleep: 6m);
+        }
+
+        var pattern = _journal.SleepMoodPattern(days: 30, thresholdHours: 7m, now: Now);
+
+        Assert.That(pattern.LongSleepDays, Is.EqualTo(4));
+        Assert.That(pattern.ShortSleepDays, Is.EqualTo(5));
+        Assert.That(pattern.IsConfident, Is.False);
+    }
+
+    [Test]
+    public void SleepMoodPattern_is_not_confident_when_short_bucket_is_one_below_the_floor()
+    {
+        // 5 long + 4 short
+        for (var i = 0; i < 5; i++)
+        {
+            Log(Today.AddDays(-i), mood: 7, sleep: 8m);
+        }
+        for (var i = 5; i < 9; i++)
+        {
+            Log(Today.AddDays(-i), mood: 5, sleep: 6m);
+        }
+
+        var pattern = _journal.SleepMoodPattern(days: 30, thresholdHours: 7m, now: Now);
+
+        Assert.That(pattern.LongSleepDays, Is.EqualTo(5));
+        Assert.That(pattern.ShortSleepDays, Is.EqualTo(4));
+        Assert.That(pattern.IsConfident, Is.False);
+    }
+
+    [Test]
+    public void SleepMoodPattern_is_confident_when_both_buckets_meet_the_floor_exactly()
+    {
+        // 5 long + 5 short, mood differs so we can also check the averages
+        for (var i = 0; i < 5; i++)
+        {
+            Log(Today.AddDays(-i), mood: 8, sleep: 8m);
+        }
+        for (var i = 5; i < 10; i++)
+        {
+            Log(Today.AddDays(-i), mood: 5, sleep: 6m);
+        }
+
+        var pattern = _journal.SleepMoodPattern(days: 30, thresholdHours: 7m, now: Now);
+
+        Assert.That(pattern.LongSleepDays, Is.EqualTo(5));
+        Assert.That(pattern.ShortSleepDays, Is.EqualTo(5));
+        Assert.That(pattern.LongSleepMoodAverage, Is.EqualTo(8m));
+        Assert.That(pattern.ShortSleepMoodAverage, Is.EqualTo(5m));
+        Assert.That(pattern.IsConfident, Is.True);
+    }
 }
