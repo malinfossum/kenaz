@@ -172,4 +172,31 @@ public class SqliteCheckInRepositoryTests
         Assert.That(File.Exists(_filePath), Is.True);
         Assert.That(repository.LoadAll(), Is.Empty);
     }
+
+    [Test]
+    public void Round_trip_under_nb_NO_locale_preserves_decimal_and_timestamp()
+    {
+        var original = System.Globalization.CultureInfo.CurrentCulture;
+        var originalUI = System.Globalization.CultureInfo.CurrentUICulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("nb-NO");
+        System.Globalization.CultureInfo.CurrentUICulture = new System.Globalization.CultureInfo("nb-NO");
+
+        try
+        {
+            var repository = new SqliteCheckInRepository(_filePath);
+            var nonUtc = new DateTimeOffset(2026, 5, 22, 8, 0, 0, TimeSpan.FromHours(2));
+            var checkIn = new CheckIn(Day, mood: 7, energy: null, sleep: 7.5m, note: null, createdAt: nonUtc, updatedAt: nonUtc);
+
+            repository.SaveAll(new[] { checkIn });
+            var loaded = repository.LoadAll();
+
+            Assert.That(loaded[0].Sleep, Is.EqualTo(7.5m), "Decimal round trip must not depend on system culture");
+            Assert.That(loaded[0].CreatedAt, Is.EqualTo(nonUtc), "DateTimeOffset round trip must preserve the non-UTC offset");
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = original;
+            System.Globalization.CultureInfo.CurrentUICulture = originalUI;
+        }
+    }
 }
