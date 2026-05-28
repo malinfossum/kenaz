@@ -156,4 +156,20 @@ public class SqliteCheckInRepositoryTests
         Assert.That(loaded[0].Date, Is.EqualTo(Day));
         Assert.That(loaded[0].Mood, Is.EqualTo(5));
     }
+
+    [Test]
+    public void Constructor_on_corrupt_db_backs_it_up_and_starts_fresh()
+    {
+        // Plant a "DB" that's actually random bytes — opening this as SQLite throws.
+        File.WriteAllBytes(_filePath, new byte[] { 0x00, 0x42, 0x69, 0x6e, 0xff, 0x00 });
+
+        var repository = new SqliteCheckInRepository(_filePath);
+
+        // The bad file got renamed away…
+        var corruptBackups = Directory.GetFiles(_dir, "checkins.db.corrupt-*.bak");
+        Assert.That(corruptBackups, Has.Length.EqualTo(1));
+        // …and a fresh, empty SQLite database took its place.
+        Assert.That(File.Exists(_filePath), Is.True);
+        Assert.That(repository.LoadAll(), Is.Empty);
+    }
 }

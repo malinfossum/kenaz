@@ -45,6 +45,20 @@ public sealed class SqliteCheckInRepository : ICheckInRepository
 
     public IReadOnlyList<CheckIn> LoadAll()
     {
+        try
+        {
+            return LoadAllCore();
+        }
+        catch (SqliteException)
+        {
+            BackUpCorruptFile();
+            EnsureSchema();
+            return new List<CheckIn>();
+        }
+    }
+
+    private IReadOnlyList<CheckIn> LoadAllCore()
+    {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
 
@@ -138,10 +152,40 @@ public sealed class SqliteCheckInRepository : ICheckInRepository
             Directory.CreateDirectory(directory);
         }
 
+        try
+        {
+            OpenAndRunSchema();
+        }
+        catch (SqliteException)
+        {
+            BackUpCorruptFile();
+            OpenAndRunSchema();
+        }
+    }
+
+    private void OpenAndRunSchema()
+    {
         using var conn = new SqliteConnection(_connectionString);
         conn.Open();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = SchemaSql;
         cmd.ExecuteNonQuery();
+    }
+
+    private void BackUpCorruptFile()
+    {
+        if (!File.Exists(_filePath))
+        {
+            return;
+        }
+
+        // Microsoft.Data.Sqlite pools connections, so the previous (failed) open
+        // can still hold the file handle on Windows even after `using` disposed it.
+        // Clear pools so File.Move can rename the doomed file.
+        SqliteConnection.ClearAllPools();
+
+        var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+        var backupPath = _filePath + $".corrupt-{timestamp}.bak";
+        File.Move(_filePath, backupPath, overwrite: true);
     }
 }
