@@ -25,6 +25,13 @@ public static class JsonToSqliteMigrator
         DateTimeOffset now,
         Func<IReadOnlyList<CheckIn>, IReadOnlyList<CheckIn>, bool> verify)
     {
+        // Pre-step: clear any orphan .migrating file left from a previous interrupted run.
+        var migratingPath = dbPath + ".migrating";
+        if (File.Exists(migratingPath))
+        {
+            File.Delete(migratingPath);
+        }
+
         if (File.Exists(dbPath))
         {
             return MigrationOutcome.NoOp;
@@ -37,7 +44,6 @@ public static class JsonToSqliteMigrator
         }
 
         var source = new JsonCheckInRepository(jsonPath).LoadAll();
-        var migratingPath = dbPath + ".migrating";
 
         var repo = new SqliteCheckInRepository(migratingPath);
         repo.SaveAll(source);

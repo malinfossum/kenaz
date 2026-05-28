@@ -165,4 +165,19 @@ public class JsonToSqliteMigratorTests
         // …and the (empty) export-format backup is also present.
         Assert.That(Directory.GetFiles(_dir, "checkins.backup-*.json"), Has.Length.EqualTo(1));
     }
+
+    [Test]
+    public void Orphan_migrating_file_is_cleaned_up_then_migration_proceeds()
+    {
+        // Stage: an orphan .migrating file + a legacy JSON. Mimics an interrupted previous run.
+        File.WriteAllBytes(_dbPath + ".migrating", new byte[] { 0xde, 0xad });
+        WriteLegacyJson(MakeCheckIn(Day1, mood: 7));
+
+        var outcome = JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now);
+
+        Assert.That(outcome, Is.EqualTo(MigrationOutcome.Migrated));
+        Assert.That(File.Exists(_dbPath + ".migrating"), Is.False, "Orphan must be deleted before migration runs.");
+        Assert.That(new SqliteCheckInRepository(_dbPath).LoadAll(), Has.Count.EqualTo(1));
+        Assert.That(Directory.GetFiles(_dir, "*.corrupt-*.bak"), Is.Empty, "Pre-step should delete the orphan outright, not rely on corrupt-recovery to rename it.");
+    }
 }
