@@ -133,4 +133,18 @@ public class JsonToSqliteMigratorTests
         Assert.That(history, Has.Count.EqualTo(2));
         Assert.That(history.Select(c => c.Mood), Is.EquivalentTo(new int?[] { 7, 4 }));
     }
+
+    [Test]
+    public void Verification_failure_deletes_migrating_path_and_keeps_json()
+    {
+        WriteLegacyJson(MakeCheckIn(Day1, mood: 7));
+
+        Assert.Throws<MigrationException>(() =>
+            JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now, verify: (a, b) => false));
+
+        Assert.That(File.Exists(_dbPath), Is.False, "Live store should never have been promoted.");
+        Assert.That(File.Exists(_dbPath + ".migrating"), Is.False, "Sentinel path should be cleaned up.");
+        Assert.That(File.Exists(_jsonPath), Is.True, "Source JSON must be untouched on failure.");
+        Assert.That(Directory.GetFiles(_dir, "checkins.backup-*.json"), Is.Empty, "Backup must not be written.");
+    }
 }
