@@ -180,4 +180,60 @@ public class JsonToSqliteMigratorTests
         Assert.That(new SqliteCheckInRepository(_dbPath).LoadAll(), Has.Count.EqualTo(1));
         Assert.That(Directory.GetFiles(_dir, "*.corrupt-*.bak"), Is.Empty, "Pre-step should delete the orphan outright, not rely on corrupt-recovery to rename it.");
     }
+
+    [Test]
+    public void Both_dbPath_and_jsonPath_exist_triggers_cleanup_returns_CleanedUp()
+    {
+        // Pre-stage a populated SQLite and a separate-content legacy JSON.
+        var dbRecord = MakeCheckIn(Day1, mood: 7);
+        new SqliteCheckInRepository(_dbPath).SaveAll(new[] { dbRecord });
+        WriteLegacyJson(MakeCheckIn(Day2, mood: 4));
+
+        var outcome = JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now);
+
+        Assert.That(outcome, Is.EqualTo(MigrationOutcome.CleanedUp));
+        Assert.That(File.Exists(_jsonPath), Is.False, "JSON must be deleted after backup is written.");
+        var backups = Directory.GetFiles(_dir, "checkins.backup-*.json");
+        Assert.That(backups, Has.Length.EqualTo(1));
+        var imported = new JsonCheckInArchive().Import(backups[0]);
+        Assert.That(imported.Records[0].Mood, Is.EqualTo(4), "Backup contains the JSON's records, not the DB's.");
+
+        // DB contents untouched.
+        var dbLoaded = new SqliteCheckInRepository(_dbPath).LoadAll();
+        Assert.That(dbLoaded.Single().Mood, Is.EqualTo(7));
+    }
+
+    [Test]
+    public void Both_files_present_with_unreadable_json_still_completes_cleanup()
+    {
+        // SQLite already populated; JSON file is unreadable garbage.
+        new SqliteCheckInRepository(_dbPath).SaveAll(new[] { MakeCheckIn(Day1, mood: 7) });
+        File.WriteAllText(_jsonPath, "{ this is not valid json ");
+
+        var outcome = JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now);
+
+        Assert.That(outcome, Is.EqualTo(MigrationOutcome.CleanedUp));
+        Assert.That(File.Exists(_jsonPath), Is.False);
+        // JsonCheckInRepository's corrupt-recovery renames the bad file…
+        Assert.That(Directory.GetFiles(_dir, "checkins.json.corrupt-*.bak"), Has.Length.EqualTo(1));
+        // …and the cleanup still writes an (empty-records) backup envelope.
+        Assert.That(Directory.GetFiles(_dir, "checkins.backup-*.json"), Has.Length.EqualTo(1));
+    }
+
+    [Test]
+    public void Cleanup_backup_uses_now_timestamp_when_an_earlier_backup_exists()
+    {
+        // Pre-existing backup from some earlier interrupted run.
+        var earlierBackup = Path.Combine(_dir, "checkins.backup-20260101-000000.json");
+        File.WriteAllText(earlierBackup, "{}"); // contents don't matter for this test
+        new SqliteCheckInRepository(_dbPath).SaveAll(new[] { MakeCheckIn(Day1, mood: 7) });
+        WriteLegacyJson(MakeCheckIn(Day2, mood: 4));
+
+        JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now);
+
+        var allBackups = Directory.GetFiles(_dir, "checkins.backup-*.json");
+        Assert.That(allBackups, Has.Length.EqualTo(2), "Earlier backup + new backup coexist as harmless duplicates.");
+        Assert.That(allBackups.Any(p => p.Contains(Now.ToString("yyyyMMdd-HHmmss"))), Is.True);
+        Assert.That(allBackups.Any(p => p.EndsWith("20260101-000000.json")), Is.True);
+    }
 }

@@ -32,6 +32,23 @@ public static class JsonToSqliteMigrator
             File.Delete(migratingPath);
         }
 
+        // Pre-step: if a previous migration crashed between promoting the new DB and writing
+        // the backup, both files coexist. Finish the cleanup now and short-circuit to CleanedUp
+        // (do NOT fall through to rule 1, which would return NoOp and skip the orientation line).
+        if (File.Exists(dbPath) && File.Exists(jsonPath))
+        {
+            var legacyRecords = new JsonCheckInRepository(jsonPath).LoadAll();
+            var cleanupBackupPath = Path.Combine(
+                Path.GetDirectoryName(dbPath)!,
+                $"checkins.backup-{now:yyyyMMdd-HHmmss}.json");
+            new JsonCheckInArchive().Export(cleanupBackupPath, legacyRecords, now);
+            if (File.Exists(jsonPath))
+            {
+                File.Delete(jsonPath);
+            }
+            return MigrationOutcome.CleanedUp;
+        }
+
         if (File.Exists(dbPath))
         {
             return MigrationOutcome.NoOp;
@@ -74,7 +91,10 @@ public static class JsonToSqliteMigrator
             Path.GetDirectoryName(dbPath)!,
             $"checkins.backup-{now:yyyyMMdd-HHmmss}.json");
         new JsonCheckInArchive().Export(backupPath, source, now);
-        File.Delete(jsonPath);
+        if (File.Exists(jsonPath))
+        {
+            File.Delete(jsonPath);
+        }
 
         return MigrationOutcome.Migrated;
     }
