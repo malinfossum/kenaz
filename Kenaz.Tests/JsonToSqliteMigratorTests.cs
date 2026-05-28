@@ -147,4 +147,22 @@ public class JsonToSqliteMigratorTests
         Assert.That(File.Exists(_jsonPath), Is.True, "Source JSON must be untouched on failure.");
         Assert.That(Directory.GetFiles(_dir, "checkins.backup-*.json"), Is.Empty, "Backup must not be written.");
     }
+
+    [Test]
+    public void Corrupt_legacy_json_results_in_empty_db_and_corrupt_backup()
+    {
+        File.WriteAllText(_jsonPath, "{ not valid json ");
+
+        var outcome = JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now);
+
+        Assert.That(outcome, Is.EqualTo(MigrationOutcome.Migrated));
+        Assert.That(File.Exists(_dbPath), Is.True);
+        Assert.That(new SqliteCheckInRepository(_dbPath).LoadAll(), Is.Empty);
+
+        // The corrupt JSON was renamed by JsonCheckInRepository's recovery before the migrator saw it…
+        var corruptBackups = Directory.GetFiles(_dir, "checkins.json.corrupt-*.bak");
+        Assert.That(corruptBackups, Has.Length.EqualTo(1));
+        // …and the (empty) export-format backup is also present.
+        Assert.That(Directory.GetFiles(_dir, "checkins.backup-*.json"), Has.Length.EqualTo(1));
+    }
 }
