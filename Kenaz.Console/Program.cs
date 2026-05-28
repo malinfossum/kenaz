@@ -10,7 +10,29 @@ internal static class Program
     {
         System.Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        var repository = new JsonCheckInRepository(JsonCheckInRepository.DefaultFilePath());
+        var jsonPath = JsonCheckInRepository.DefaultFilePath();
+        var dbPath   = SqliteCheckInRepository.DefaultFilePath();
+
+        MigrationOutcome outcome;
+        try
+        {
+            outcome = JsonToSqliteMigrator.MigrateIfNeeded(jsonPath, dbPath, DateTimeOffset.Now);
+        }
+        catch (MigrationException ex)
+        {
+            WriteLine("Couldn't safely move your check-ins to the new store — your data is untouched.");
+            WriteLine($"Details: {ex.Message}");
+            return;
+        }
+
+        if (outcome == MigrationOutcome.Migrated || outcome == MigrationOutcome.CleanedUp)
+        {
+            WriteLine("Your check-ins have moved to a new file (checkins.db).");
+            WriteLine("The previous JSON is preserved as checkins.backup-YYYYMMDD-HHMMSS.json — safe to delete once you've confirmed everything's intact.");
+            WriteLine();
+        }
+
+        var repository = new SqliteCheckInRepository(dbPath);
         var journal = new WellbeingJournal(repository, () => DateTimeOffset.Now);
 
         WriteLine("Kenaz — your daily check-in. Bring it into the light.");
