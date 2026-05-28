@@ -3,9 +3,13 @@ using System.Text.Json;
 namespace Kenaz.Core;
 
 /// <summary>
-/// Stores check-ins as a JSON file. Writes are atomic (temp file + move) so a crash never leaves
-/// a half-written file, and loads are recoverable: corrupt files are set aside and every record is
-/// re-validated and de-duped by date. This is the only place in Kenaz.Core that touches the disk.
+/// Reads and writes check-ins as a JSON file. Up through M3 this was the live store;
+/// from M4 onward the live store is <see cref="SqliteCheckInRepository"/> and this
+/// class is used only as the corrupt-safe reader of the legacy file during a one-shot
+/// JSON → SQLite migration (see <see cref="JsonToSqliteMigrator"/>). Writes are atomic
+/// (temp file + move) so a crash never leaves a half-written file, and loads are
+/// recoverable: corrupt files are set aside and every record is re-validated and
+/// de-duped by date.
 /// </summary>
 public class JsonCheckInRepository : ICheckInRepository
 {
