@@ -78,4 +78,82 @@ public class SqliteCheckInRepositoryTests
         Assert.That(loaded[0].CreatedAt, Is.EqualTo(Created));
         Assert.That(loaded[0].UpdatedAt, Is.EqualTo(Updated));
     }
+
+    [Test]
+    public void SaveAll_then_LoadAll_preserves_decimal_precision()
+    {
+        var repository = new SqliteCheckInRepository(_filePath);
+        var checkIn = new CheckIn(Day, mood: null, energy: null, sleep: 7.5m, note: null, createdAt: Created, updatedAt: Created);
+
+        repository.SaveAll(new[] { checkIn });
+        var loaded = repository.LoadAll();
+
+        // The TEXT storage path preserves 7.5 exactly; REAL would risk 7.4999...
+        Assert.That(loaded[0].Sleep, Is.EqualTo(7.5m));
+    }
+
+    [Test]
+    public void SaveAll_then_LoadAll_preserves_null_fields()
+    {
+        var repository = new SqliteCheckInRepository(_filePath);
+        // Only mood is set — every other optional field stays null (never 0, never "").
+        var checkIn = new CheckIn(Day, mood: 5, energy: null, sleep: null, note: null, createdAt: Created, updatedAt: Created);
+
+        repository.SaveAll(new[] { checkIn });
+        var loaded = repository.LoadAll();
+
+        Assert.That(loaded[0].Mood, Is.EqualTo(5));
+        Assert.That(loaded[0].Energy, Is.Null);
+        Assert.That(loaded[0].Sleep, Is.Null);
+        Assert.That(loaded[0].Note, Is.Null);
+    }
+
+    [Test]
+    public void SaveAll_replaces_previous_state()
+    {
+        var repository = new SqliteCheckInRepository(_filePath);
+        var first = new CheckIn(Day, mood: 7, energy: null, sleep: null, note: null, createdAt: Created, updatedAt: Created);
+        var second = new CheckIn(Day.AddDays(1), mood: 3, energy: null, sleep: null, note: null, createdAt: Created, updatedAt: Created);
+
+        repository.SaveAll(new[] { first });
+        repository.SaveAll(new[] { second });
+        var loaded = repository.LoadAll();
+
+        // The second SaveAll wins entirely — no leftover row from the first.
+        Assert.That(loaded, Has.Count.EqualTo(1));
+        Assert.That(loaded[0].Date, Is.EqualTo(Day.AddDays(1)));
+        Assert.That(loaded[0].Mood, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void SaveAll_empty_list_clears_the_table()
+    {
+        var repository = new SqliteCheckInRepository(_filePath);
+        var checkIn = new CheckIn(Day, mood: 5, energy: null, sleep: null, note: null, createdAt: Created, updatedAt: Created);
+
+        repository.SaveAll(new[] { checkIn });
+        repository.SaveAll(Array.Empty<CheckIn>());
+
+        Assert.That(repository.LoadAll(), Is.Empty);
+    }
+
+    [Test]
+    public void SaveAll_with_duplicate_dates_in_input_rolls_back_atomically()
+    {
+        var repository = new SqliteCheckInRepository(_filePath);
+        var seed = new CheckIn(Day, mood: 5, energy: null, sleep: null, note: null, createdAt: Created, updatedAt: Created);
+        repository.SaveAll(new[] { seed });
+
+        var dup1 = new CheckIn(Day.AddDays(1), mood: 1, energy: null, sleep: null, note: null, createdAt: Created, updatedAt: Created);
+        var dup2 = new CheckIn(Day.AddDays(1), mood: 2, energy: null, sleep: null, note: null, createdAt: Created, updatedAt: Created);
+
+        Assert.Throws<Microsoft.Data.Sqlite.SqliteException>(() => repository.SaveAll(new[] { dup1, dup2 }));
+
+        // The transaction rolled back — the seed row from the previous SaveAll is still there,
+        // and no partial state from the duplicate-dates input is visible.
+        var loaded = repository.LoadAll();
+        Assert.That(loaded, Has.Count.EqualTo(1));
+        Assert.That(loaded[0].Date, Is.EqualTo(Day));
+        Assert.That(loaded[0].Mood, Is.EqualTo(5));
+    }
 }
