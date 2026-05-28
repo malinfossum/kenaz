@@ -261,4 +261,32 @@ public class JsonToSqliteMigratorTests
         // Tidy up the directory we created so [TearDown] can clean the temp folder.
         Directory.Delete(migratingPath, recursive: true);
     }
+
+    [Test]
+    public void Backup_write_failure_after_promotion_still_returns_Migrated_and_recovers_next_launch()
+    {
+        WriteLegacyJson(MakeCheckIn(Day1, mood: 7));
+
+        // Stage a *directory* at the backup file's target path so JsonCheckInArchive.Export
+        // can't write a regular file there (IOException). Use the same timestamp the migrator
+        // will use, derived from `Now`.
+        var blockingBackupPath = Path.Combine(_dir, $"checkins.backup-{Now:yyyyMMdd-HHmmss}.json");
+        Directory.CreateDirectory(blockingBackupPath);
+
+        var outcome = JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now);
+
+        Assert.That(outcome, Is.EqualTo(MigrationOutcome.Migrated), "Live store is promoted; the backup hiccup is swallowed.");
+        Assert.That(File.Exists(_dbPath), Is.True);
+        Assert.That(new SqliteCheckInRepository(_dbPath).LoadAll(), Has.Count.EqualTo(1));
+        Assert.That(File.Exists(_jsonPath), Is.True, "JSON not deleted because the backup didn't land.");
+
+        // Clear the blocking directory and re-run; pre-step's 'both files exist' branch finishes the job.
+        Directory.Delete(blockingBackupPath, recursive: true);
+        var secondLaunch = new DateTimeOffset(Now.UtcDateTime.AddSeconds(1), TimeSpan.Zero);
+        var secondOutcome = JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, secondLaunch);
+
+        Assert.That(secondOutcome, Is.EqualTo(MigrationOutcome.CleanedUp));
+        Assert.That(File.Exists(_jsonPath), Is.False);
+        Assert.That(Directory.GetFiles(_dir, "checkins.backup-*.json"), Has.Length.EqualTo(1));
+    }
 }

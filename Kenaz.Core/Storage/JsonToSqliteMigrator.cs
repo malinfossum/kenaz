@@ -112,13 +112,28 @@ public static class JsonToSqliteMigrator
             throw new MigrationException("Couldn't promote the new database — check filesystem and try again.", ex);
         }
 
-        var backupPath = Path.Combine(
-            Path.GetDirectoryName(dbPath)!,
-            $"checkins.backup-{now:yyyyMMdd-HHmmss}.json");
-        new JsonCheckInArchive().Export(backupPath, source, now);
-        if (File.Exists(jsonPath))
+        // Steps 6+7: best-effort backup + delete. Live store already committed.
+        try
         {
-            File.Delete(jsonPath);
+            var backupPath = Path.Combine(
+                Path.GetDirectoryName(dbPath)!,
+                $"checkins.backup-{now:yyyyMMdd-HHmmss}.json");
+            new JsonCheckInArchive().Export(backupPath, source, now);
+            if (File.Exists(jsonPath))
+            {
+                File.Delete(jsonPath);
+            }
+        }
+        catch (IOException)
+        {
+            // Live store is the source of truth. Pre-step on the next launch's "both files exist"
+            // branch will retry the backup write and the JSON delete.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Same rationale as the IOException swallow above: on Windows, File.Move into a
+            // path occupied by a directory surfaces as UnauthorizedAccessException rather than
+            // IOException. Same self-heal flow on the next launch.
         }
 
         return MigrationOutcome.Migrated;
