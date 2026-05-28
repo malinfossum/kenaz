@@ -30,7 +30,13 @@ public static class JsonToSqliteMigrator
             return MigrationOutcome.NoOp;
         }
 
-        throw new NotImplementedException("Other cases land in later tasks.");
+        if (!File.Exists(jsonPath))
+        {
+            _ = new SqliteCheckInRepository(dbPath);
+            return MigrationOutcome.FreshInstall;
+        }
+
+        throw new NotImplementedException("Migration case lands in Task 10.");
     }
 
     private static bool DefaultVerifier(IReadOnlyList<CheckIn> source, IReadOnlyList<CheckIn> readback)

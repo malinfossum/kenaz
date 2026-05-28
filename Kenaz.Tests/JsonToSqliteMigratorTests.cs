@@ -41,4 +41,15 @@ public class JsonToSqliteMigratorTests
         Assert.That(File.Exists(_dbPath), Is.True);
         Assert.That(File.Exists(_jsonPath), Is.False);
     }
+
+    [Test]
+    public void Fresh_install_creates_empty_db_and_no_backup_returns_FreshInstall()
+    {
+        var outcome = JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now);
+
+        Assert.That(outcome, Is.EqualTo(MigrationOutcome.FreshInstall));
+        Assert.That(File.Exists(_dbPath), Is.True);
+        Assert.That(new SqliteCheckInRepository(_dbPath).LoadAll(), Is.Empty);
+        Assert.That(Directory.GetFiles(_dir, "checkins.backup-*.json"), Is.Empty);
+    }
 }
