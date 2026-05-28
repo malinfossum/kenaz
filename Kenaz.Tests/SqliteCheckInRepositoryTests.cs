@@ -5,6 +5,10 @@ namespace Kenaz.Tests;
 
 public class SqliteCheckInRepositoryTests
 {
+    private static readonly DateOnly Day = new DateOnly(2026, 5, 22);
+    private static readonly DateTimeOffset Created = new DateTimeOffset(2026, 5, 22, 8, 0, 0, TimeSpan.FromHours(2));
+    private static readonly DateTimeOffset Updated = new DateTimeOffset(2026, 5, 22, 20, 0, 0, TimeSpan.FromHours(2));
+
     private string _dir = null!;
     private string _filePath = null!;
 
@@ -54,5 +58,24 @@ public class SqliteCheckInRepositoryTests
         var repository = new SqliteCheckInRepository(_filePath);
 
         Assert.That(repository.LoadAll(), Is.Empty);
+    }
+
+    [Test]
+    public void SaveAll_then_LoadAll_round_trips_all_fields_including_timestamps()
+    {
+        var repository = new SqliteCheckInRepository(_filePath);
+        var checkIn = new CheckIn(Day, mood: 7, energy: 6, sleep: 7.5m, note: "ok", createdAt: Created, updatedAt: Updated);
+
+        repository.SaveAll(new[] { checkIn });
+        var loaded = repository.LoadAll();
+
+        Assert.That(loaded, Has.Count.EqualTo(1));
+        Assert.That(loaded[0].Date, Is.EqualTo(Day));
+        Assert.That(loaded[0].Mood, Is.EqualTo(7));
+        Assert.That(loaded[0].Energy, Is.EqualTo(6));
+        Assert.That(loaded[0].Sleep, Is.EqualTo(7.5m));
+        Assert.That(loaded[0].Note, Is.EqualTo("ok"));
+        Assert.That(loaded[0].CreatedAt, Is.EqualTo(Created));
+        Assert.That(loaded[0].UpdatedAt, Is.EqualTo(Updated));
     }
 }
