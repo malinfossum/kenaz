@@ -62,30 +62,55 @@ public static class JsonToSqliteMigrator
 
         var source = new JsonCheckInRepository(jsonPath).LoadAll();
 
-        var repo = new SqliteCheckInRepository(migratingPath);
-        repo.SaveAll(source);
-
-        var verifyList = repo.LoadAll();
-        var sortedSource = source.OrderBy(c => c.Date).ToList();
-        var sortedVerify = verifyList.OrderBy(c => c.Date).ToList();
-        if (!verify(sortedSource, sortedVerify))
+        try
         {
-            // Microsoft.Data.Sqlite pools connections, so the SaveAll/LoadAll above can
-            // leave the migrating file's handle in the pool on Windows — clear pools so
-            // File.Delete doesn't hit a sharing violation. Same defensive idiom as
-            // SqliteCheckInRepository.BackUpCorruptFile.
+            var repo = new SqliteCheckInRepository(migratingPath);
+            repo.SaveAll(source);
+
+            var verifyList = repo.LoadAll();
+            var sortedSource = source.OrderBy(c => c.Date).ToList();
+            var sortedVerify = verifyList.OrderBy(c => c.Date).ToList();
+            if (!verify(sortedSource, sortedVerify))
+            {
+                // Microsoft.Data.Sqlite pools connections, so the SaveAll/LoadAll above can
+                // leave the migrating file's handle in the pool on Windows — clear pools so
+                // File.Delete doesn't hit a sharing violation. Same defensive idiom as
+                // SqliteCheckInRepository.BackUpCorruptFile.
+                SqliteConnection.ClearAllPools();
+                if (File.Exists(migratingPath))
+                {
+                    File.Delete(migratingPath);
+                }
+                throw new MigrationException("Verification failed — the new database didn't match the source.");
+            }
+
+            // Same pool reason as above: File.Move on Windows fails with IOException if
+            // the SQLite connection pool still holds the migrating file's handle.
+            SqliteConnection.ClearAllPools();
+            File.Move(migratingPath, dbPath);
+        }
+        catch (SqliteException ex)
+        {
+            // Same pool reason as inside the try: clear pools before File.Delete to avoid
+            // a sharing violation if the connection handle is still pooled on Windows.
             SqliteConnection.ClearAllPools();
             if (File.Exists(migratingPath))
             {
                 File.Delete(migratingPath);
             }
-            throw new MigrationException("Verification failed — the new database didn't match the source.");
+            throw new MigrationException("Couldn't write the new database — check disk space and try again.", ex);
         }
-
-        // Same pool reason as above: File.Move on Windows fails with IOException if
-        // the SQLite connection pool still holds the migrating file's handle.
-        SqliteConnection.ClearAllPools();
-        File.Move(migratingPath, dbPath);
+        catch (IOException ex)
+        {
+            // Same pool reason as inside the try: clear pools before File.Delete to avoid
+            // a sharing violation if the connection handle is still pooled on Windows.
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(migratingPath))
+            {
+                File.Delete(migratingPath);
+            }
+            throw new MigrationException("Couldn't promote the new database — check filesystem and try again.", ex);
+        }
 
         var backupPath = Path.Combine(
             Path.GetDirectoryName(dbPath)!,

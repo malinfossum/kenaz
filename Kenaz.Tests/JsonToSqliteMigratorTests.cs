@@ -236,4 +236,29 @@ public class JsonToSqliteMigratorTests
         Assert.That(allBackups.Any(p => p.Contains(Now.ToString("yyyyMMdd-HHmmss"))), Is.True);
         Assert.That(allBackups.Any(p => p.EndsWith("20260101-000000.json")), Is.True);
     }
+
+    [Test]
+    public void SaveAll_failure_translates_to_MigrationException_and_cleans_up()
+    {
+        // Stage a JSON file with a duplicate-date pair the SQLite PK will reject.
+        // We can't easily inject SaveAll failure from the outside, but we can stage a JSON
+        // file whose deserialized records would trip the SQLite PK on insert — except that
+        // JsonCheckInRepository already dedups on load. So we use an alternative path: place
+        // a *directory* at the migratingPath so File.Move during promotion throws IOException.
+        var migratingPath = _dbPath + ".migrating";
+        WriteLegacyJson(MakeCheckIn(Day1, mood: 7));
+        // The directory blocks SaveAll from creating a writable SQLite file at the sentinel path.
+        Directory.CreateDirectory(migratingPath);
+
+        var ex = Assert.Throws<MigrationException>(() =>
+            JsonToSqliteMigrator.MigrateIfNeeded(_jsonPath, _dbPath, Now));
+
+        Assert.That(ex!.InnerException, Is.Not.Null, "MigrationException should wrap the underlying exception.");
+        Assert.That(File.Exists(_dbPath), Is.False, "dbPath must not have been promoted.");
+        Assert.That(File.Exists(_jsonPath), Is.True, "Source JSON must survive.");
+        Assert.That(Directory.GetFiles(_dir, "checkins.backup-*.json"), Is.Empty);
+
+        // Tidy up the directory we created so [TearDown] can clean the temp folder.
+        Directory.Delete(migratingPath, recursive: true);
+    }
 }
