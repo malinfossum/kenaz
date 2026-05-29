@@ -15,7 +15,7 @@ Malin (career-changer, sosionom → developer) wants a *personal* C# project tha
 
 **Intended outcome:** a private, mobile-first wellbeing companion built along a clear technical spine (Core → console → JSON → SQLite → ASP.NET API → PWA frontend) that ends as an impressive fullstack project tying her two project worlds together.
 
-**Name:** **Kenaz** — the Elder Futhark torch rune, *"to kindle, to bring into the light."* Fire-family sibling to Ignite ("a small flame, kept going"); verified GitHub-clean and cross-language safe. Tagline: **"bring it into the light."**
+**Name:** **Kenaz** — the Elder Futhark torch rune, *"to spark, to bring into the light."* Fire-family sibling to Ignite ("a small flame, kept going"); verified GitHub-clean and cross-language safe. Tagline: **"bring it into the light."**
 
 ---
 

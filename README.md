@@ -2,11 +2,19 @@
 
 A private, local-first daily wellbeing check-in: log mood, energy, and sleep, and see your patterns over time. *Bring it into the light.*
 
-C# solution with a domain core, a console front-end, and an NUnit test project — growing toward a SQLite store, an ASP.NET Minimal API, and a mobile-first PWA.
+C# solution with a domain core, a console front-end, and an NUnit test project — built around a SQLite store, with an ASP.NET Minimal API and a mobile-first PWA on the roadmap.
+
+## The name
+
+**Kenaz** (pronounced *KEN-ahz*) is the Elder Futhark rune for *torch* — *to spark, to bring into the light.* It's from the runic alphabet of the early Norse and Germanic peoples, the same lineage the Vikings later carved into weapons, monuments, and amulets. In Norwegian: *å tenne, å bringe frem i lyset.*
+
+Kenaz is the fire-family sibling to [Ignite](https://github.com/malinfossum/ignite), my local-first ADHD task PWA: where Ignite is *a small flame, kept going*, Kenaz is the torch you hold up to see your week clearly. Hence the tagline.
+
+To me, Kenaz is about consistency, reflection, and the self-care that lets you become a better version of yourself and put your energy where it counts. Coming from social work — and living with ADHD — I've learned you can't pour from an empty cup: put on your own oxygen mask first, then help the person next to you. The Norwegian words I live by — *egensikkerhet*, *egenomsorg*, *ta vare på deg selv*, *bruk energi på det som betyr noe og som gir noe tilbake* — are the values this tool is built around.
 
 ## Projects
 
-- `Kenaz.Core` — domain model, rules, and insights. No `Console`; file IO is isolated to the JSON storage adapter behind a repository interface.
+- `Kenaz.Core` — domain model, rules, and insights. No `Console`; file IO is isolated to the storage adapters behind a repository interface.
 - `Kenaz.Console` — console front-end; calls into `Kenaz.Core`.
 - `Kenaz.Tests` — NUnit; references `Kenaz.Core` only.
 
@@ -22,9 +30,15 @@ In the app you can check in for today (mood, energy, sleep, and a note — each 
 
 ## Data
 
-Check-ins are stored locally as JSON in `%APPDATA%\Kenaz\checkins.json`. Nothing leaves your machine.
+Check-ins are stored locally as a SQLite database in `%APPDATA%\Kenaz\checkins.db`. Nothing leaves your machine.
 
 Export saves all your check-ins to `Documents\Kenaz\kenaz-backup-<timestamp>.json`; import merges a backup back in, where the more recently edited entry wins so a restore never overwrites newer changes. The export file is plain, unencrypted JSON — keep it somewhere private.
+
+### Files you may see in `%APPDATA%\Kenaz\`
+
+- `checkins.db` — the live store.
+- `checkins.backup-YYYYMMDD-HHMMSS.json` — written by the JSON → SQLite migration, in the same format as a normal export. You may occasionally see more than one if a previous migration was interrupted; they contain the same historic data (the timestamp in the filename tells you which is which), and any of them is importable via menu option 5 if you ever need to restore. Plaintext (same caveat as exports); safe to delete once you've confirmed your check-ins are intact in the new store (option 3 or 6).
+- `checkins.json.corrupt-YYYYMMDD-HHMMSS.bak` / `checkins.db.corrupt-YYYYMMDD-HHMMSS.bak` — Kenaz sets the bad file aside (with this name) if it can't read it on startup, then starts with a fresh empty store. If you see one, the matching live file (`checkins.json` or `checkins.db`) was unreadable; the `.bak` is your last-known-good copy.
 
 Design spec: `docs/superpowers/specs/2026-05-21-kenaz-design.md`
 
