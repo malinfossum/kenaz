@@ -66,15 +66,18 @@ builder.WebHost.ConfigureKestrel(k => k.ListenLocalhost(port));   // 127.0.0.1 +
 
 builder.Services.AddSingleton<ICheckInRepository>(_ => new SqliteCheckInRepository(dbPath));
 builder.Services.AddSingleton(sp => new WellbeingJournal(sp.GetRequiredService<ICheckInRepository>(), () => DateTimeOffset.Now));
-builder.Services.AddSingleton(new ApiToken(token));   // wraps the token for the filter
+builder.Services.AddSingleton(new ApiToken(token));      // wraps the token for the filter
+builder.Services.AddSingleton<WriteLock>();              // SemaphoreSlim(1,1) — serializes mutating requests
 
 var app = builder.Build();
 
+app.UseExceptionHandler(b => b.Run(ctx => { ctx.Response.StatusCode = 500; return Task.CompletedTask; }));  // unhandled → bodyless 500
 app.MapGroup("/checkins")
    .AddEndpointFilter<BearerTokenFilter>()
    .MapCheckInEndpoints();
 
-app.Logger.LogInformation("Kenaz API → http://127.0.0.1:{Port}  (Authorization: Bearer {Token})", port, token);
+// Startup banner to stdout ONLY — the token never enters the logging pipeline.
+Console.WriteLine($"Kenaz API → http://127.0.0.1:{port}  (Authorization: Bearer {token})");
 app.Run();
 
 public partial class Program;   // so WebApplicationFactory<Program> can host it in tests
@@ -122,7 +125,13 @@ public static RouteGroupBuilder MapCheckInEndpoints(this RouteGroupBuilder group
 }
 ```
 
+*(The sketch shows routing and status mapping; the `WriteLock` acquisition on `PUT`/`DELETE` and the catch-all `500` handler are described below — omitted here for clarity.)*
+
 `PUT` is an upsert by design — the date in the route is the resource key, so re-PUTting a date updates it. `AddOrUpdate`'s own validation (via `CheckIn`'s constructor) is the single source of truth for what a valid check-in is; the API just translates the `ArgumentException` it already throws — for an all-null body or an out-of-range scale — into a `400`. No validation logic is duplicated in the API.
+
+**Body binding:** the request body is required — an absent, `null`, or unparseable JSON body is a `400` before the handler runs (never a `500`); the `{}` all-null case reaches `AddOrUpdate` and 400s through its `ArgumentException`. **Storage failures:** an unexpected `SqliteException`/`IOException` from the journal (disk full, or a lock held past the 3 s `busy_timeout`) isn't caught per-endpoint — a single catch-all handler maps it to a **bodyless `500`** (no developer exception page, no stack trace over the wire).
+
+**Write serialization:** the `PUT` and `DELETE` handlers acquire the `WriteLock` (below) for the duration of their journal call, so two overlapping writes can't lose each other's data.
 
 ### Contracts (DTOs, in `Kenaz.Api`)
 
@@ -153,6 +162,10 @@ public static class TokenStore
 `GetOrCreate`: if the file exists, return its trimmed contents; otherwise generate 32 bytes from `RandomNumberGenerator`, Base64Url-encode them, create the directory if needed, write the file, and return the token. The token is persisted so it is stable across runs (M6 and curl sessions can rely on one value). Token-at-rest adds no exposure beyond the already-accepted plaintext database in the same folder (invariant #9).
 
 `BearerTokenFilter : IEndpointFilter`, applied to the whole `/checkins` group: pull the `Authorization` header, require the `Bearer ` prefix, and compare the rest to the configured token with `CryptographicOperations.FixedTimeEquals` over the UTF-8 bytes (constant-time — no early-exit timing signal). Missing header, wrong scheme, or mismatch → `Results.Unauthorized()` (`401`) with a `WWW-Authenticate: Bearer` header. Because the filter sits on the group, all four endpoints are guarded by one line of wiring. The token is wrapped once in a small `ApiToken` record (defined alongside the filter in `BearerTokenFilter.cs`) and registered as a singleton, so the filter receives it by DI rather than capturing a bare string.
+
+### Write serialization (`WriteLock`)
+
+The API is the first concurrent writer over the journal's read-modify-write (`LoadAll` → mutate → `SaveAll`, which rewrites the whole table). If two writes interleave, the later `SaveAll` overwrites the earlier from a stale snapshot — a silent **lost update** that `busy_timeout` does *not* prevent (it only stops the lock contention from erroring). `WriteLock` is a `SemaphoreSlim(1,1)` singleton; the `PUT` and `DELETE` handlers acquire it for the duration of their journal call, so every read-modify-write is atomic end-to-end. `GET`s don't take it. At single-user request rates it's essentially never contended — it's correctness insurance for M6's concurrent / bulk / sync writes.
 
 ---
 
@@ -191,7 +204,7 @@ private SqliteConnection OpenConnection()
 }
 ```
 
-With the default rollback journal, a second writer that arrives mid-transaction now **waits up to 3 s** for the lock instead of immediately throwing `SQLITE_BUSY` (a 500). For a single human clicking around that ceiling is never reached; it just turns a rare double-submit race into a brief wait. WAL stays out (YAGNI) — revisit only if read-during-write stalls ever show up. This is the single change inside `Storage/`, and it's a refactor that leaves behaviour identical for the console.
+With the default rollback journal, a second writer that arrives mid-transaction now **waits up to 3 s** for the lock instead of immediately throwing `SQLITE_BUSY` (a 500). For a single human clicking around that ceiling is never reached; it just turns a rare double-submit race into a brief wait. WAL stays out (YAGNI) — revisit only if read-during-write stalls ever show up. This is the single change inside `Storage/`, and it's a refactor that leaves behaviour identical for the console. Note `busy_timeout` only stops the *contention error* — it does **not** prevent a lost update when two read-modify-write requests interleave; that's the API-level `WriteLock`'s job.
 
 ---
 
@@ -199,7 +212,9 @@ With the default rollback journal, a second writer that arrives mid-transaction 
 
 - **Loopback bind.** `ListenLocalhost(port)` → `127.0.0.1` and `[::1]` only. Remote machines cannot reach the API at all; the token guards against *local* callers (other processes, or a web page in the user's own browser fetching `localhost`).
 - **HTTP, not HTTPS.** Loopback traffic never leaves the machine, so a TLS dev-certificate would be friction with no privacy gain. (If a future milestone ever exposes the API beyond loopback — explicitly out of scope and against the spec — TLS becomes mandatory.)
-- **Token guard.** Persisted bearer token; constant-time compare; `401` on any failure. The token is never written to logs, and no endpoint logs request bodies (wellbeing content stays out of logs).
+- **Token guard.** Persisted bearer token; constant-time compare; `401` on any failure. The token is printed once to **stdout** (`Console.WriteLine`) and never enters the logging pipeline.
+- **Quiet logs.** ASP.NET request logging is pinned to `Warning` (`Logging:LogLevel:Microsoft.AspNetCore`), so the normal per-request line — which carries the check-in *date* in its path — isn't written. Request bodies (mood, note, …) are never logged at any level.
+- **No leaked internals.** Unexpected storage failures return a bodyless `500` via a catch-all handler; the developer exception page is never served, so no stack trace crosses the wire.
 - **CSRF property (free).** State-changing requests require a non-simple `Authorization` header, which forces a CORS preflight. The API answers no CORS headers, so a browser blocks any cross-origin `PUT`/`DELETE` a malicious page tries to forge — the token requirement doubles as CSRF protection. CORS for M6's PWA origin is a deliberate M6 decision, made when that origin exists.
 - **Untrusted-input boundary (invariant #6).** Every `PUT` body is validated by `CheckIn`'s constructor before it can persist; malformed input is a `400`, never a stored bad row. (Output escaping is an M6 render-boundary concern — there is no HTML here.)
 - **Plaintext-at-rest (invariant #9).** Unchanged and still accepted through M5: the database, exports, and now the token file are plaintext in a single-user local folder.
@@ -219,10 +234,13 @@ With the default rollback journal, a second writer that arrives mid-transaction 
 | Token storage | `%APPDATA%\Kenaz\api-token`, Base64Url of 32 random bytes | Same folder convention; no exposure beyond the already-plaintext data beside it. |
 | Binding | Kestrel `ListenLocalhost`, HTTP | Loopback-only per the spec; HTTPS is friction with no gain on loopback. |
 | Config seam | `Kenaz:DbPath` / `TokenPath` / `Token` / `Port` via `IConfiguration` | Makes integration tests **and** manual curl runs hermetic — fixes the M4 "hardwired to `%APPDATA%`" pain. |
-| Concurrency | `PRAGMA busy_timeout = 3000` per connection; no WAL | The named M5 revisit point, handled with one line; WAL is overkill for one user. |
+| Concurrency | `busy_timeout = 3000` per connection **+** an API-level `SemaphoreSlim(1,1)` write lock | `busy_timeout` stops `SQLITE_BUSY` errors; the write lock stops the read-modify-write lost update the API would otherwise allow. WAL stays out (YAGNI). |
 | Port | `5247`, configurable | A fixed default M6/curl can target; overridable to avoid clashes. |
 | DTOs | In `Kenaz.Api`, `record` types | The wire contract is the API's concern; Core's models stay clean. |
 | Testing | `WebApplicationFactory<Program>` integration tests | Real HTTP through the real pipeline (auth, binding, serialization); the milestone's main new learning surface. |
+| Token output | `Console.WriteLine` (stdout), never `ILogger` | Keeps the secret out of any log sink added later. |
+| Logging | ASP.NET request logging pinned to `Warning` | Keeps check-in dates (carried in request paths) out of logs. |
+| Unhandled failures | Catch-all → bodyless `500`; no developer exception page | A clean contract edge; no stack trace over the wire. |
 
 ---
 
@@ -232,7 +250,7 @@ With the default rollback journal, a second writer that arrives mid-transaction 
 - **Export/import over HTTP.** Console-only for now; `JsonCheckInArchive` already covers portability.
 - **Repository-level `Upsert`/`Delete`.** The journal-level `Delete` suffices; revisit only with a concrete need the journal can't serve.
 - **CORS, OpenAPI/Swagger, rate limiting.** CORS belongs with M6's known PWA origin. OpenAPI is a cheap future dev-aid, not needed for four curlable routes. Rate limiting is meaningless for a single local user.
-- **HTTPS, WAL, schema versioning, accounts/multi-user, the PWA itself.** Against the local-first single-user stance (lines 69) or later milestones (M6).
+- **HTTPS, WAL, schema versioning, accounts/multi-user, the PWA itself.** Against the local-first single-user stance (line 69) or later milestones (M6).
 - **Console rewiring.** The console keeps talking to Core directly; it does not become an API client.
 - **API tests for the startup banner / `Program` wiring beyond the endpoints.** Matches the M1–M4 convention — composition roots are verified by running.
 
@@ -240,9 +258,9 @@ With the default rollback journal, a second writer that arrives mid-transaction 
 
 ## Testing
 
-Integration tests use ASP.NET's `WebApplicationFactory<Program>` (in-memory `TestServer` — no real port bound, so loopback config is irrelevant in tests). `Kenaz.Tests.csproj` gains `Microsoft.AspNetCore.Mvc.Testing` (10.0.x, matching the target framework), a `<FrameworkReference Include="Microsoft.AspNetCore.App" />`, and a project reference to `Kenaz.Api`. A factory subclass overrides `Kenaz:DbPath` to a per-test temp database (same `Guid.NewGuid().ToString("N")` temp-folder pattern as the existing fixtures) and `Kenaz:Token` to a known value; `TearDown` deletes the folder and calls `SqliteConnection.ClearAllPools()` (the M4 Windows file-lock lesson). **~16 new tests, bringing the total to ~108.**
+Integration tests use ASP.NET's `WebApplicationFactory<Program>` (in-memory `TestServer` — no real port bound, so loopback config is irrelevant in tests). `Kenaz.Tests.csproj` gains `Microsoft.AspNetCore.Mvc.Testing` (10.0.x, matching the target framework), a `<FrameworkReference Include="Microsoft.AspNetCore.App" />`, and a project reference to `Kenaz.Api`. A factory subclass overrides `Kenaz:DbPath` to a per-test temp database (same `Guid.NewGuid().ToString("N")` temp-folder pattern as the existing fixtures) and `Kenaz:Token` to a known value; `TearDown` deletes the folder and calls `SqliteConnection.ClearAllPools()` (the M4 Windows file-lock lesson). **~18 new tests, bringing the total to ~110.**
 
-### `CheckInApiTests` (~13)
+### `CheckInApiTests` (~15)
 - `Get_checkins_without_token_returns_401`
 - `Get_checkins_with_wrong_token_returns_401`
 - `Get_checkins_on_empty_store_returns_200_and_empty_array`
@@ -256,6 +274,8 @@ Integration tests use ASP.NET's `WebApplicationFactory<Program>` (in-memory `Tes
 - `Delete_unknown_date_returns_404`
 - `Round_trips_decimal_sleep_and_null_fields` (PUT `sleep 7.5`, null energy/note → GET returns them exactly)
 - `Get_history_orders_newest_first` (PUT several dates → GET is descending by date)
+- `Concurrent_puts_to_different_dates_both_persist` (two overlapping PUTs — the write-lock guard against lost updates)
+- `Put_with_missing_or_null_body_returns_400`
 
 ### `WellbeingJournalTests` additions (~3)
 - `Delete_removes_the_date_and_returns_true`
@@ -267,14 +287,14 @@ Integration tests use ASP.NET's `WebApplicationFactory<Program>` (in-memory `Tes
 ## Verification (M5, end-to-end)
 
 - `dotnet build Kenaz.slnx` — clean (0 warnings / 0 errors).
-- `dotnet test Kenaz.slnx` — all NUnit tests pass (~108 total).
+- `dotnet test Kenaz.slnx` — all NUnit tests pass (~110 total).
 - **Manual (hermetic via the config seam — no real data touched):**
   `dotnet run --project Kenaz.Api -- --Kenaz:DbPath=C:\Temp\kenaz-m5\checkins.db --Kenaz:TokenPath=C:\Temp\kenaz-m5\api-token`
   reads the printed token, then with `$T` = that token:
   1. `curl http://127.0.0.1:5247/checkins` → `401`.
   2. `curl -H "Authorization: Bearer $T" http://127.0.0.1:5247/checkins` → `200` `[]`.
   3. `curl -X PUT -H "Authorization: Bearer $T" -H "Content-Type: application/json" -d '{"mood":7,"sleep":7.5}' http://127.0.0.1:5247/checkins/2026-05-31` → `200` with the resource.
-  4. `GET /checkins/2026-05-31` → `200`; `GET /checkins/2020-01-01` → `404`; `PUT …/not-a-date` → `400`; `PUT` an empty body `{}` → `400`.
+  4. `GET /checkins/2026-05-31` → `200`; `GET /checkins/2020-01-01` → `404`; `PUT …/not-a-date` → `400`; `PUT` an empty body `{}` or no body → `400`.
   5. `DELETE /checkins/2026-05-31` → `204`; the same `GET` → `404`.
 - **MVC separation check:** `rg -n "Console\.|File\.|Directory\.|Path\." Kenaz.Core --glob '!Kenaz.Core/Storage/*'` — expected: no matches (M5 adds only `WellbeingJournal.Delete` in `Services/`, no IO).
 
