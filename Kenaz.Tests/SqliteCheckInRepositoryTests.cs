@@ -199,4 +199,16 @@ public class SqliteCheckInRepositoryTests
             System.Globalization.CultureInfo.CurrentUICulture = originalUI;
         }
     }
+
+    [Test]
+    public void OpenConnection_applies_busy_timeout_pragma()
+    {
+        var repository = new SqliteCheckInRepository(_filePath);
+
+        using var conn = repository.OpenConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "PRAGMA busy_timeout;";
+
+        Assert.That(Convert.ToInt32(cmd.ExecuteScalar()), Is.EqualTo(3000));
+    }
 }

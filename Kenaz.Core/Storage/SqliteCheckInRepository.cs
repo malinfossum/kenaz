@@ -57,10 +57,27 @@ public sealed class SqliteCheckInRepository : ICheckInRepository
         }
     }
 
+    /// <summary>
+    /// Opens a connection and sets busy_timeout so a writer that arrives mid-transaction waits up
+    /// to 3 s for the lock instead of throwing SQLITE_BUSY. Internal only so the busy_timeout test
+    /// can read the PRAGMA back; not part of the public surface.
+    /// </summary>
+    internal SqliteConnection OpenConnection()
+    {
+        var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+        using (var pragma = conn.CreateCommand())
+        {
+            pragma.CommandText = "PRAGMA busy_timeout = 3000;";
+            pragma.ExecuteNonQuery();
+        }
+
+        return conn;
+    }
+
     private IReadOnlyList<CheckIn> LoadAllCore()
     {
-        using var conn = new SqliteConnection(_connectionString);
-        conn.Open();
+        using var conn = OpenConnection();
 
         using var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT Date, Mood, Energy, Sleep, Note, CreatedAt, UpdatedAt FROM CheckIns ORDER BY Date";
@@ -97,8 +114,7 @@ public sealed class SqliteCheckInRepository : ICheckInRepository
             Directory.CreateDirectory(directory);
         }
 
-        using var conn = new SqliteConnection(_connectionString);
-        conn.Open();
+        using var conn = OpenConnection();
         using var tx = conn.BeginTransaction();
 
         using (var clearCmd = conn.CreateCommand())
@@ -165,8 +181,7 @@ public sealed class SqliteCheckInRepository : ICheckInRepository
 
     private void OpenAndRunSchema()
     {
-        using var conn = new SqliteConnection(_connectionString);
-        conn.Open();
+        using var conn = OpenConnection();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = SchemaSql;
         cmd.ExecuteNonQuery();
