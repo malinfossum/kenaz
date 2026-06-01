@@ -41,6 +41,23 @@ public class WellbeingJournal
     }
 
     /// <summary>
+    /// Removes the check-in for <paramref name="date"/> if present. Returns true when a row was
+    /// removed, false when there was nothing to remove. Built on the same LoadAll/SaveAll seam as
+    /// AddOrUpdate — no repository change needed. Skips the write when nothing was removed.
+    /// </summary>
+    public bool Delete(DateOnly date)
+    {
+        var checkIns = _repository.LoadAll().ToList();
+        var removed = checkIns.RemoveAll(c => c.Date == date) > 0;
+        if (removed)
+        {
+            _repository.SaveAll(checkIns);
+        }
+
+        return removed;
+    }
+
+    /// <summary>
     /// Folds imported check-ins into the store, keyed by date. A new date is added; an existing date is
     /// replaced only when the incoming record is more recently updated; otherwise it is left unchanged.
     /// Imported timestamps are preserved (this never routes through <see cref="AddOrUpdate"/>).

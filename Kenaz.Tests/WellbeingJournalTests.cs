@@ -7,14 +7,15 @@ public class WellbeingJournalTests
     private static readonly DateOnly Day = new DateOnly(2026, 5, 22);
 
     private DateTimeOffset _clock;
+    private InMemoryCheckInRepository _repository = null!;
     private WellbeingJournal _journal = null!;
 
     [SetUp]
     public void SetUp()
     {
         _clock = new DateTimeOffset(2026, 5, 22, 9, 0, 0, TimeSpan.Zero);
-        var repository = new InMemoryCheckInRepository();
-        _journal = new WellbeingJournal(repository, () => _clock);
+        _repository = new InMemoryCheckInRepository();
+        _journal = new WellbeingJournal(_repository, () => _clock);
     }
 
     [Test]
@@ -125,5 +126,43 @@ public class WellbeingJournalTests
 
         Assert.That(result.Unchanged, Is.EqualTo(1));
         Assert.That(_journal.GetByDate(Day)!.Mood, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void Delete_removes_the_date_and_returns_true()
+    {
+        _journal.AddOrUpdate(Day, mood: 6, energy: null, sleep: null, note: null);
+
+        var removed = _journal.Delete(Day);
+
+        Assert.That(removed, Is.True);
+        Assert.That(_journal.GetByDate(Day), Is.Null);
+        Assert.That(_journal.History(), Is.Empty);
+    }
+
+    [Test]
+    public void Delete_absent_date_returns_false_and_writes_nothing()
+    {
+        _journal.AddOrUpdate(Day, mood: 6, energy: null, sleep: null, note: null);
+        var writesAfterSeed = _repository.SaveAllCount;
+
+        var removed = _journal.Delete(Day.AddDays(-1));
+
+        Assert.That(removed, Is.False);
+        Assert.That(_repository.SaveAllCount, Is.EqualTo(writesAfterSeed), "Deleting an absent date must not write.");
+        Assert.That(_journal.GetByDate(Day), Is.Not.Null, "The seeded day is untouched.");
+    }
+
+    [Test]
+    public void Delete_only_removes_the_target_date()
+    {
+        _journal.AddOrUpdate(Day, mood: 5, energy: null, sleep: null, note: null);
+        _journal.AddOrUpdate(Day.AddDays(-1), mood: 7, energy: null, sleep: null, note: null);
+
+        var removed = _journal.Delete(Day);
+
+        Assert.That(removed, Is.True);
+        Assert.That(_journal.GetByDate(Day), Is.Null);
+        Assert.That(_journal.GetByDate(Day.AddDays(-1))!.Mood, Is.EqualTo(7), "Other dates survive.");
     }
 }
