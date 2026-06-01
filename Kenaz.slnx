@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Kenaz.Api/Kenaz.Api.csproj" />
   <Project Path="Kenaz.Console/Kenaz.Console.csproj" />
   <Project Path="Kenaz.Core/Kenaz.Core.csproj" />
   <Project Path="Kenaz.Tests/Kenaz.Tests.csproj" />
