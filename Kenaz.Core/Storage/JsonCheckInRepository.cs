@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace Kenaz.Core;
@@ -106,7 +107,7 @@ public class JsonCheckInRepository : ICheckInRepository
 
     private void BackUpCorruptFile()
     {
-        var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
+        var timestamp = DateTimeOffset.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
         var backupPath = _filePath + $".corrupt-{timestamp}.bak";
         File.Move(_filePath, backupPath, overwrite: true);
     }

@@ -184,7 +184,7 @@ public sealed class SqliteCheckInRepository : ICheckInRepository
         // Clear pools so File.Move can rename the doomed file.
         SqliteConnection.ClearAllPools();
 
-        var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+        var timestamp = DateTimeOffset.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
         var backupPath = _filePath + $".corrupt-{timestamp}.bak";
         File.Move(_filePath, backupPath, overwrite: true);
     }
