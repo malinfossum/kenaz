@@ -189,4 +189,17 @@ public class CheckInApiTests
         Assert.That(fetched!.Date, Is.EqualTo("2026-05-31"));
         Assert.That(fetched.Mood, Is.EqualTo(8));
     }
+
+    [Test]
+    public async Task Get_history_orders_newest_first()
+    {
+        await _client.PutAsJsonAsync("/checkins/2026-05-29", new UpsertCheckInRequest(1, null, null, null));
+        await _client.PutAsJsonAsync("/checkins/2026-05-31", new UpsertCheckInRequest(2, null, null, null));
+        await _client.PutAsJsonAsync("/checkins/2026-05-30", new UpsertCheckInRequest(3, null, null, null));
+
+        var all = await _client.GetFromJsonAsync<List<CheckInResponse>>("/checkins");
+
+        Assert.That(all!.Select(c => c.Date),
+            Is.EqualTo(new[] { "2026-05-31", "2026-05-30", "2026-05-29" }));
+    }
 }
