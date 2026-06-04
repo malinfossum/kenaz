@@ -231,4 +231,20 @@ public class CheckInApiTests
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
     }
+
+    [Test]
+    public async Task Concurrent_puts_to_different_dates_both_persist()
+    {
+        // Two overlapping writes. Without the WriteLock the later SaveAll could overwrite the earlier
+        // from a stale snapshot (lost update); the lock serializes them so both survive.
+        var put1 = _client.PutAsJsonAsync("/checkins/2026-05-30", new UpsertCheckInRequest(Mood: 5, Energy: null, Sleep: null, Note: null));
+        var put2 = _client.PutAsJsonAsync("/checkins/2026-05-31", new UpsertCheckInRequest(Mood: 8, Energy: null, Sleep: null, Note: null));
+        await Task.WhenAll(put1, put2);
+
+        Assert.That((await put1).StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That((await put2).StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        var all = await _client.GetFromJsonAsync<List<CheckInResponse>>("/checkins");
+        Assert.That(all, Has.Count.EqualTo(2), "Neither concurrent write may be lost.");
+    }
 }
