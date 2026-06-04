@@ -55,6 +55,7 @@ public class CheckInApiTests
         var response = await _client.GetAsync("/checkins");
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+        Assert.That(response.Headers.WwwAuthenticate.Single().Scheme, Is.EqualTo("Bearer"));
     }
 
     [Test]
@@ -65,6 +66,7 @@ public class CheckInApiTests
         var response = await _client.GetAsync("/checkins");
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+        Assert.That(response.Headers.WwwAuthenticate.Single().Scheme, Is.EqualTo("Bearer"));
     }
 
     [Test]
@@ -98,6 +100,11 @@ public class CheckInApiTests
     {
         var first = await (await _client.PutAsJsonAsync("/checkins/2026-05-31",
             new UpsertCheckInRequest(Mood: 5, Energy: null, Sleep: null, Note: null))).Content.ReadFromJsonAsync<CheckInResponse>();
+
+        // Let the wall clock advance so the second write's UpdatedAt is strictly newer — the journal
+        // stamps UpdatedAt from DateTimeOffset.Now, and without this the two writes could share a tick.
+        await Task.Delay(50);
+
         var second = await (await _client.PutAsJsonAsync("/checkins/2026-05-31",
             new UpsertCheckInRequest(Mood: 9, Energy: null, Sleep: null, Note: null))).Content.ReadFromJsonAsync<CheckInResponse>();
 
@@ -105,7 +112,8 @@ public class CheckInApiTests
         Assert.That(all, Has.Count.EqualTo(1), "Re-PUT updates in place, not a second row.");
         Assert.That(second!.Mood, Is.EqualTo(9));
         Assert.That(second.CreatedAt, Is.EqualTo(first!.CreatedAt), "CreatedAt is stable across updates.");
-        Assert.That(second.UpdatedAt, Is.GreaterThanOrEqualTo(first.UpdatedAt));
+        Assert.That(second.UpdatedAt, Is.GreaterThan(first.UpdatedAt), "The update advances UpdatedAt.");
+        Assert.That(second.UpdatedAt, Is.GreaterThan(second.CreatedAt), "UpdatedAt moves past the original CreatedAt on update.");
     }
 
     [Test]
