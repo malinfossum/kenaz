@@ -5,6 +5,8 @@ namespace Kenaz.Api;
 
 public static class CheckInEndpoints
 {
+    private const string InvalidDateMessage = "Date must be yyyy-MM-dd.";
+
     public static RouteGroupBuilder MapCheckInEndpoints(this RouteGroupBuilder group)
     {
         group.MapGet("/", (WellbeingJournal journal) =>
@@ -13,13 +15,13 @@ public static class CheckInEndpoints
         group.MapGet("/{date}", (string date, WellbeingJournal journal) =>
             TryDate(date, out var d)
                 ? journal.GetByDate(d) is { } c ? Results.Ok(CheckInResponse.From(c)) : Results.NotFound()
-                : Results.BadRequest("Date must be yyyy-MM-dd."));
+                : Results.BadRequest(InvalidDateMessage));
 
         group.MapPut("/{date}", async (string date, UpsertCheckInRequest? body, WellbeingJournal journal, WriteLock writeLock) =>
         {
             if (!TryDate(date, out var d))
             {
-                return Results.BadRequest("Date must be yyyy-MM-dd.");
+                return Results.BadRequest(InvalidDateMessage);
             }
 
             if (body is null)
@@ -47,7 +49,7 @@ public static class CheckInEndpoints
         {
             if (!TryDate(date, out var d))
             {
-                return Results.BadRequest("Date must be yyyy-MM-dd.");
+                return Results.BadRequest(InvalidDateMessage);
             }
 
             await writeLock.WaitAsync();

@@ -97,9 +97,9 @@ public class CheckInApiTests
     public async Task Put_twice_updates_in_place_and_preserves_CreatedAt()
     {
         var first = await (await _client.PutAsJsonAsync("/checkins/2026-05-31",
-            new UpsertCheckInRequest(5, null, null, null))).Content.ReadFromJsonAsync<CheckInResponse>();
+            new UpsertCheckInRequest(Mood: 5, Energy: null, Sleep: null, Note: null))).Content.ReadFromJsonAsync<CheckInResponse>();
         var second = await (await _client.PutAsJsonAsync("/checkins/2026-05-31",
-            new UpsertCheckInRequest(9, null, null, null))).Content.ReadFromJsonAsync<CheckInResponse>();
+            new UpsertCheckInRequest(Mood: 9, Energy: null, Sleep: null, Note: null))).Content.ReadFromJsonAsync<CheckInResponse>();
 
         var all = await _client.GetFromJsonAsync<List<CheckInResponse>>("/checkins");
         Assert.That(all, Has.Count.EqualTo(1), "Re-PUT updates in place, not a second row.");
@@ -193,9 +193,9 @@ public class CheckInApiTests
     [Test]
     public async Task Get_history_orders_newest_first()
     {
-        await _client.PutAsJsonAsync("/checkins/2026-05-29", new UpsertCheckInRequest(1, null, null, null));
-        await _client.PutAsJsonAsync("/checkins/2026-05-31", new UpsertCheckInRequest(2, null, null, null));
-        await _client.PutAsJsonAsync("/checkins/2026-05-30", new UpsertCheckInRequest(3, null, null, null));
+        await _client.PutAsJsonAsync("/checkins/2026-05-29", new UpsertCheckInRequest(Mood: 1, Energy: null, Sleep: null, Note: null));
+        await _client.PutAsJsonAsync("/checkins/2026-05-31", new UpsertCheckInRequest(Mood: 2, Energy: null, Sleep: null, Note: null));
+        await _client.PutAsJsonAsync("/checkins/2026-05-30", new UpsertCheckInRequest(Mood: 3, Energy: null, Sleep: null, Note: null));
 
         var all = await _client.GetFromJsonAsync<List<CheckInResponse>>("/checkins");
 
@@ -207,7 +207,7 @@ public class CheckInApiTests
     public async Task Delete_existing_checkin_returns_204_then_get_returns_404()
     {
         await _client.PutAsJsonAsync("/checkins/2026-05-31",
-            new UpsertCheckInRequest(7, null, null, null));
+            new UpsertCheckInRequest(Mood: 7, Energy: null, Sleep: null, Note: null));
 
         var delete = await _client.DeleteAsync("/checkins/2026-05-31");
         Assert.That(delete.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
