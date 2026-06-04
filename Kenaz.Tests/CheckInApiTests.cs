@@ -120,4 +120,44 @@ public class CheckInApiTests
         Assert.That(all[0].Energy, Is.Null);
         Assert.That(all[0].Note, Is.Null);
     }
+
+    [Test]
+    public async Task Put_with_all_null_fields_returns_400()
+    {
+        var response = await _client.PutAsJsonAsync("/checkins/2026-05-31",
+            new UpsertCheckInRequest(Mood: null, Energy: null, Sleep: null, Note: null));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
+
+    [Test]
+    public async Task Put_with_out_of_range_mood_returns_400()
+    {
+        var response = await _client.PutAsJsonAsync("/checkins/2026-05-31",
+            new UpsertCheckInRequest(Mood: 99, Energy: null, Sleep: null, Note: null));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
+
+    [Test]
+    public async Task Put_with_invalid_date_format_returns_400()
+    {
+        var response = await _client.PutAsJsonAsync("/checkins/not-a-date",
+            new UpsertCheckInRequest(Mood: 7, Energy: null, Sleep: null, Note: null));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
+
+    [Test]
+    public async Task Put_with_null_json_body_returns_400()
+    {
+        // A literal `null` JSON body binds as a null UpsertCheckInRequest, so the handler's explicit
+        // null guard returns 400. (We assert the `null`-body case directly: a truly empty body can
+        // surface as 415 depending on content-type, which isn't the case we're pinning here.)
+        var content = new StringContent("null", System.Text.Encoding.UTF8, "application/json");
+
+        var response = await _client.PutAsync("/checkins/2026-05-31", content);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
 }

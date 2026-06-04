@@ -10,11 +10,16 @@ public static class CheckInEndpoints
         group.MapGet("/", (WellbeingJournal journal) =>
             Results.Ok(journal.History().Select(CheckInResponse.From)));
 
-        group.MapPut("/{date}", async (string date, UpsertCheckInRequest body, WellbeingJournal journal, WriteLock writeLock) =>
+        group.MapPut("/{date}", async (string date, UpsertCheckInRequest? body, WellbeingJournal journal, WriteLock writeLock) =>
         {
             if (!TryDate(date, out var d))
             {
                 return Results.BadRequest("Date must be yyyy-MM-dd.");
+            }
+
+            if (body is null)
+            {
+                return Results.BadRequest("Request body is required.");
             }
 
             await writeLock.WaitAsync();
