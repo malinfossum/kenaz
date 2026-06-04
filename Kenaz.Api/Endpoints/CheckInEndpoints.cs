@@ -10,6 +10,11 @@ public static class CheckInEndpoints
         group.MapGet("/", (WellbeingJournal journal) =>
             Results.Ok(journal.History().Select(CheckInResponse.From)));
 
+        group.MapGet("/{date}", (string date, WellbeingJournal journal) =>
+            TryDate(date, out var d)
+                ? journal.GetByDate(d) is { } c ? Results.Ok(CheckInResponse.From(c)) : Results.NotFound()
+                : Results.BadRequest("Date must be yyyy-MM-dd."));
+
         group.MapPut("/{date}", async (string date, UpsertCheckInRequest? body, WellbeingJournal journal, WriteLock writeLock) =>
         {
             if (!TryDate(date, out var d))

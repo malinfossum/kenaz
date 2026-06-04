@@ -160,4 +160,33 @@ public class CheckInApiTests
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
     }
+
+    [Test]
+    public async Task Get_unknown_date_returns_404()
+    {
+        var response = await _client.GetAsync("/checkins/2020-01-01");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+    }
+
+    [Test]
+    public async Task Get_by_date_with_invalid_format_returns_400()
+    {
+        var response = await _client.GetAsync("/checkins/31-05-2026");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
+
+    [Test]
+    public async Task Get_existing_date_returns_200_with_the_checkin()
+    {
+        await _client.PutAsJsonAsync("/checkins/2026-05-31",
+            new UpsertCheckInRequest(Mood: 8, Energy: null, Sleep: null, Note: null));
+
+        var fetched = await _client.GetFromJsonAsync<CheckInResponse>("/checkins/2026-05-31");
+
+        Assert.That(fetched, Is.Not.Null);
+        Assert.That(fetched!.Date, Is.EqualTo("2026-05-31"));
+        Assert.That(fetched.Mood, Is.EqualTo(8));
+    }
 }
