@@ -12,6 +12,9 @@ var token     = builder.Configuration["Kenaz:Token"] ?? TokenStore.GetOrCreate(t
 
 // Keep check-in dates (carried in request paths) and bodies out of the logs.
 builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
+// Quiet the framework's startup lifetime banner (Now listening / Application started / Content root)
+// so the only startup notice is our own line below.
+builder.Logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
 
 builder.WebHost.ConfigureKestrel(k => k.ListenLocalhost(port));   // 127.0.0.1 + [::1] only
 

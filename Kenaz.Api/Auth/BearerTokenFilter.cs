@@ -27,7 +27,7 @@ public sealed class BearerTokenFilter : IEndpointFilter
 
         if (header.StartsWith(prefix, StringComparison.Ordinal))
         {
-            var presented = Encoding.UTF8.GetBytes(header.Substring(prefix.Length));
+            var presented = Encoding.UTF8.GetBytes(header[prefix.Length..]);
             if (CryptographicOperations.FixedTimeEquals(presented, _expected))
             {
                 return await next(context);
