@@ -202,4 +202,33 @@ public class CheckInApiTests
         Assert.That(all!.Select(c => c.Date),
             Is.EqualTo(new[] { "2026-05-31", "2026-05-30", "2026-05-29" }));
     }
+
+    [Test]
+    public async Task Delete_existing_checkin_returns_204_then_get_returns_404()
+    {
+        await _client.PutAsJsonAsync("/checkins/2026-05-31",
+            new UpsertCheckInRequest(7, null, null, null));
+
+        var delete = await _client.DeleteAsync("/checkins/2026-05-31");
+        Assert.That(delete.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
+
+        var get = await _client.GetAsync("/checkins/2026-05-31");
+        Assert.That(get.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+    }
+
+    [Test]
+    public async Task Delete_unknown_date_returns_404()
+    {
+        var response = await _client.DeleteAsync("/checkins/2020-01-01");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+    }
+
+    [Test]
+    public async Task Delete_with_invalid_date_format_returns_400()
+    {
+        var response = await _client.DeleteAsync("/checkins/nope");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
 }

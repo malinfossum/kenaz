@@ -43,6 +43,24 @@ public static class CheckInEndpoints
             }
         });
 
+        group.MapDelete("/{date}", async (string date, WellbeingJournal journal, WriteLock writeLock) =>
+        {
+            if (!TryDate(date, out var d))
+            {
+                return Results.BadRequest("Date must be yyyy-MM-dd.");
+            }
+
+            await writeLock.WaitAsync();
+            try
+            {
+                return journal.Delete(d) ? Results.NoContent() : Results.NotFound();
+            }
+            finally
+            {
+                writeLock.Release();
+            }
+        });
+
         return group;
     }
 
