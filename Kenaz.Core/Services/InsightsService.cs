@@ -22,7 +22,11 @@ public sealed class InsightsService
     {
         var hasWeekData = _journal.Last7Days(now).Count > 0;
 
-        // Highlights (Task 2) and the real pattern + teaser (Task 3) are stubbed here.
+        var brightest = _journal.BestDay(c => c.Mood, WeekDays, now);
+        var hardest = _journal.WorstDay(c => c.Mood, WeekDays, now);
+        var hasHighlights = brightest is not null && hardest is not null && brightest.Date != hardest.Date;
+
+        // The real pattern + teaser (Task 3) are stubbed here.
         var stubbedPattern = new SleepMoodPattern(
             threshold: WellbeingJournal.DefaultSleepThresholdHours,
             longSleepDays: 0,
@@ -37,9 +41,9 @@ public sealed class InsightsService
             sleepAverage: _journal.Average(c => c.Sleep, WeekDays, now),
             streakDays: _journal.StreakDays(now),
             hasWeekData: hasWeekData,
-            brightestDay: null,
-            hardestDay: null,
-            hasHighlights: false,
+            brightestDay: hasHighlights ? brightest : null,
+            hardestDay: hasHighlights ? hardest : null,
+            hasHighlights: hasHighlights,
             sleepMood: stubbedPattern,
             showSleepTeaser: false,
             teaserDirection: SleepTeaserDirection.None);

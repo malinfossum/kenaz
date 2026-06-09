@@ -61,4 +61,56 @@ public class InsightsServiceTests
 
         Assert.That(summary.StreakDays, Is.EqualTo(3));
     }
+
+    [Test]
+    public void Summarize_highlights_available_when_two_distinct_moods()
+    {
+        Log(Today, mood: 9);
+        Log(Today.AddDays(-1), mood: 3);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.HasHighlights, Is.True);
+        Assert.That(summary.BrightestDay!.Date, Is.EqualTo(Today));
+        Assert.That(summary.HardestDay!.Date, Is.EqualTo(Today.AddDays(-1)));
+    }
+
+    [Test]
+    public void Summarize_gates_highlights_when_all_moods_equal()
+    {
+        Log(Today, mood: 6);
+        Log(Today.AddDays(-1), mood: 6);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.HasHighlights, Is.False);
+        Assert.That(summary.BrightestDay, Is.Null);
+        Assert.That(summary.HardestDay, Is.Null);
+    }
+
+    [Test]
+    public void Summarize_gates_highlights_with_a_single_mood_day()
+    {
+        Log(Today, mood: 7);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.HasHighlights, Is.False);
+        Assert.That(summary.BrightestDay, Is.Null);
+        Assert.That(summary.HardestDay, Is.Null);
+    }
+
+    [Test]
+    public void Summarize_highlights_use_the_7_day_window()
+    {
+        Log(Today.AddDays(-7), mood: 9);   // outside the window — must not become brightest
+        Log(Today, mood: 5);
+        Log(Today.AddDays(-1), mood: 3);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.HasHighlights, Is.True);
+        Assert.That(summary.BrightestDay!.Date, Is.EqualTo(Today));
+        Assert.That(summary.HardestDay!.Date, Is.EqualTo(Today.AddDays(-1)));
+    }
 }
