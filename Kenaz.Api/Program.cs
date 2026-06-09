@@ -22,6 +22,7 @@ builder.Services.AddSingleton<ICheckInRepository>(_ => new SqliteCheckInReposito
 builder.Services.AddSingleton(sp => new WellbeingJournal(sp.GetRequiredService<ICheckInRepository>(), () => DateTimeOffset.Now));
 builder.Services.AddSingleton(new ApiToken(token));
 builder.Services.AddSingleton<WriteLock>();
+builder.Services.AddSingleton(sp => new InsightsService(sp.GetRequiredService<WellbeingJournal>()));
 
 var app = builder.Build();
 
@@ -31,6 +32,10 @@ app.UseExceptionHandler(b => b.Run(ctx => { ctx.Response.StatusCode = 500; retur
 app.MapGroup("/checkins")
    .AddEndpointFilter<BearerTokenFilter>()
    .MapCheckInEndpoints();
+
+app.MapGroup("/insights")
+   .AddEndpointFilter<BearerTokenFilter>()
+   .MapInsightsEndpoints();
 
 // Token printed to stdout ONLY — never through ILogger / any log sink.
 Console.WriteLine($"Kenaz API → http://127.0.0.1:{port}  (Authorization: Bearer {token})");
