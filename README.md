@@ -39,7 +39,7 @@ dotnet run --project Kenaz.Api
 
 On startup it prints the local URL and a bearer token, e.g. `Kenaz API → http://127.0.0.1:5247  (Authorization: Bearer …)`. The API binds to loopback only (`127.0.0.1` / `[::1]`) — it is never reachable from another machine — and every request needs that token. The token is generated once and stored at `%APPDATA%\Kenaz\api-token`; treat it like a password for localhost.
 
-Endpoints (all under `/checkins`, all requiring `Authorization: Bearer <token>`, where `{date}` is `yyyy-MM-dd`):
+Endpoints (all requiring `Authorization: Bearer <token>`, where `{date}` is `yyyy-MM-dd`):
 
 | Method | Route | Does |
 |---|---|---|
@@ -47,6 +47,7 @@ Endpoints (all under `/checkins`, all requiring `Authorization: Bearer <token>`,
 | `GET` | `/checkins/{date}` | Read one day (`404` if absent) |
 | `PUT` | `/checkins/{date}` | Create or update a day |
 | `DELETE` | `/checkins/{date}` | Remove a day (`404` if absent) |
+| `GET` | `/insights` | Computed insights: 7-day averages, streak, highlights, sleep–mood pattern (read-only) |
 
 ## Data
 
