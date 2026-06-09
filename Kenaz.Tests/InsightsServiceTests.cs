@@ -113,4 +113,88 @@ public class InsightsServiceTests
         Assert.That(summary.BrightestDay!.Date, Is.EqualTo(Today));
         Assert.That(summary.HardestDay!.Date, Is.EqualTo(Today.AddDays(-1)));
     }
+
+    [Test]
+    public void Summarize_shows_teaser_when_confident_and_gap_at_least_one()
+    {
+        // 5 long-sleep days mood 8 (avg 8), 5 short-sleep days mood 7 (avg 7) → gap exactly 1.0
+        for (var i = 0; i < 5; i++) Log(Today.AddDays(-i), mood: 8, sleep: 8m);
+        for (var i = 5; i < 10; i++) Log(Today.AddDays(-i), mood: 7, sleep: 6m);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.SleepMood.IsConfident, Is.True);
+        Assert.That(summary.ShowSleepTeaser, Is.True);
+        Assert.That(summary.TeaserDirection, Is.EqualTo(SleepTeaserDirection.MoreSleepBetter));
+    }
+
+    [Test]
+    public void Summarize_hides_teaser_when_gap_below_one()
+    {
+        // long avg 8, short avg 7.2 ({8,7,7,7,7}) → gap 0.8 < 1.0 → hidden
+        for (var i = 0; i < 5; i++) Log(Today.AddDays(-i), mood: 8, sleep: 8m);
+        Log(Today.AddDays(-5), mood: 8, sleep: 6m);
+        for (var i = 6; i < 10; i++) Log(Today.AddDays(-i), mood: 7, sleep: 6m);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.SleepMood.IsConfident, Is.True);
+        Assert.That(summary.ShowSleepTeaser, Is.False);
+        Assert.That(summary.TeaserDirection, Is.EqualTo(SleepTeaserDirection.None));
+    }
+
+    [Test]
+    public void Summarize_hides_teaser_when_not_confident()
+    {
+        // 4 long + 5 short (long bucket one below the floor of 5) — large gap, but not confident
+        for (var i = 0; i < 4; i++) Log(Today.AddDays(-i), mood: 9, sleep: 8m);
+        for (var i = 4; i < 9; i++) Log(Today.AddDays(-i), mood: 3, sleep: 6m);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.SleepMood.IsConfident, Is.False);
+        Assert.That(summary.ShowSleepTeaser, Is.False);
+        Assert.That(summary.TeaserDirection, Is.EqualTo(SleepTeaserDirection.None));
+    }
+
+    [Test]
+    public void Summarize_teaser_direction_is_less_sleep_better_at_negative_gap()
+    {
+        // long avg 7, short avg 8 → gap -1.0 → shown, shorter nights felt better
+        for (var i = 0; i < 5; i++) Log(Today.AddDays(-i), mood: 7, sleep: 8m);
+        for (var i = 5; i < 10; i++) Log(Today.AddDays(-i), mood: 8, sleep: 6m);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.ShowSleepTeaser, Is.True);
+        Assert.That(summary.TeaserDirection, Is.EqualTo(SleepTeaserDirection.LessSleepBetter));
+    }
+
+    [Test]
+    public void Summarize_pattern_confident_carries_threshold_counts_and_averages()
+    {
+        for (var i = 0; i < 5; i++) Log(Today.AddDays(-i), mood: 8, sleep: 8m);
+        for (var i = 5; i < 10; i++) Log(Today.AddDays(-i), mood: 5, sleep: 6m);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.SleepMood.IsConfident, Is.True);
+        Assert.That(summary.SleepMood.Threshold, Is.EqualTo(7m));
+        Assert.That(summary.SleepMood.LongSleepDays, Is.EqualTo(5));
+        Assert.That(summary.SleepMood.ShortSleepDays, Is.EqualTo(5));
+        Assert.That(summary.SleepMood.LongSleepMoodAverage, Is.EqualTo(8m));
+        Assert.That(summary.SleepMood.ShortSleepMoodAverage, Is.EqualTo(5m));
+    }
+
+    [Test]
+    public void Summarize_pattern_not_confident_below_min_days_per_bucket()
+    {
+        // 4 long + 4 short — both below the floor of 5
+        for (var i = 0; i < 4; i++) Log(Today.AddDays(-i), mood: 8, sleep: 8m);
+        for (var i = 4; i < 8; i++) Log(Today.AddDays(-i), mood: 5, sleep: 6m);
+
+        var summary = _insights.Summarize(Now);
+
+        Assert.That(summary.SleepMood.IsConfident, Is.False);
+    }
 }

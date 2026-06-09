@@ -26,14 +26,8 @@ public sealed class InsightsService
         var hardest = _journal.WorstDay(c => c.Mood, WeekDays, now);
         var hasHighlights = brightest is not null && hardest is not null && brightest.Date != hardest.Date;
 
-        // The real pattern + teaser (Task 3) are stubbed here.
-        var stubbedPattern = new SleepMoodPattern(
-            threshold: WellbeingJournal.DefaultSleepThresholdHours,
-            longSleepDays: 0,
-            shortSleepDays: 0,
-            longSleepMoodAverage: null,
-            shortSleepMoodAverage: null,
-            isConfident: false);
+        var pattern = _journal.SleepMoodPattern(PatternDays, WellbeingJournal.DefaultSleepThresholdHours, now);
+        var (showTeaser, direction) = TeaserFrom(pattern);
 
         return new InsightsSummary(
             moodAverage: _journal.Average(c => c.Mood, WeekDays, now),
@@ -44,8 +38,23 @@ public sealed class InsightsService
             brightestDay: hasHighlights ? brightest : null,
             hardestDay: hasHighlights ? hardest : null,
             hasHighlights: hasHighlights,
-            sleepMood: stubbedPattern,
-            showSleepTeaser: false,
-            teaserDirection: SleepTeaserDirection.None);
+            sleepMood: pattern,
+            showSleepTeaser: showTeaser,
+            teaserDirection: direction);
+    }
+
+    private static (bool show, SleepTeaserDirection direction) TeaserFrom(SleepMoodPattern p)
+    {
+        if (!p.IsConfident
+            || p.LongSleepMoodAverage is not { } longAvg
+            || p.ShortSleepMoodAverage is not { } shortAvg)
+        {
+            return (false, SleepTeaserDirection.None);
+        }
+
+        var gap = longAvg - shortAvg;
+        if (gap >= 1.0m) return (true, SleepTeaserDirection.MoreSleepBetter);
+        if (gap <= -1.0m) return (true, SleepTeaserDirection.LessSleepBetter);
+        return (false, SleepTeaserDirection.None);
     }
 }
