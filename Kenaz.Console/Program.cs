@@ -34,6 +34,7 @@ internal static class Program
 
         var repository = new SqliteCheckInRepository(dbPath);
         var journal = new WellbeingJournal(repository, () => DateTimeOffset.Now);
+        var insights = new InsightsService(journal);
 
         WriteLine("Kenaz — your daily check-in. Bring it into the light.");
 
@@ -54,7 +55,7 @@ internal static class Program
                     CheckInToday(journal);
                     break;
                 case "2":
-                    ShowTodayVsWeek(journal);
+                    ShowTodayVsWeek(journal, insights);
                     break;
                 case "3":
                     ShowHistory(journal);
@@ -66,7 +67,7 @@ internal static class Program
                     ImportCheckIns(journal);
                     break;
                 case "6":
-                    ShowWeeklyReview(journal);
+                    ShowWeeklyReview(insights);
                     break;
                 case "0":
                     running = false;
@@ -123,14 +124,15 @@ internal static class Program
         }
     }
 
-    private static void ShowTodayVsWeek(WellbeingJournal journal)
+    private static void ShowTodayVsWeek(WellbeingJournal journal, InsightsService insights)
     {
         var now = DateTimeOffset.Now;
         var today = DateOnly.FromDateTime(now.LocalDateTime);
         var todayCheckIn = journal.GetByDate(today);
+        var summary = insights.Summarize(now);
 
         WriteLine();
-        if (journal.Last7Days(now).Count == 0)
+        if (!summary.HasWeekData)
         {
             WriteLine("Not enough check-ins yet — check in a few days and your patterns will show up here.");
             return;
@@ -140,26 +142,18 @@ internal static class Program
             ? "You haven't checked in today yet. Here's your last 7 days:"
             : "Today vs your last 7 days:");
 
-        WriteLine($"  Mood     today {Scale(todayCheckIn?.Mood)}    7-day avg {Average(journal.Average(c => c.Mood, 7, now))}");
-        WriteLine($"  Energy   today {Scale(todayCheckIn?.Energy)}    7-day avg {Average(journal.Average(c => c.Energy, 7, now))}");
-        WriteLine($"  Sleep    today {Hours(todayCheckIn?.Sleep)}    7-day avg {AverageHours(journal.Average(c => c.Sleep, 7, now))}");
+        WriteLine($"  Mood     today {Scale(todayCheckIn?.Mood)}    7-day avg {Average(summary.MoodAverage)}");
+        WriteLine($"  Energy   today {Scale(todayCheckIn?.Energy)}    7-day avg {Average(summary.EnergyAverage)}");
+        WriteLine($"  Sleep    today {Hours(todayCheckIn?.Sleep)}    7-day avg {AverageHours(summary.SleepAverage)}");
         WriteLine();
-        WriteLine(StreakMessage(journal.StreakDays(now)));
+        WriteLine(StreakMessage(summary.StreakDays));
 
-        var pattern = journal.SleepMoodPattern(30, WellbeingJournal.DefaultSleepThresholdHours, now);
-        if (pattern.IsConfident)
+        if (summary.ShowSleepTeaser)
         {
-            var gap = pattern.LongSleepMoodAverage!.Value - pattern.ShortSleepMoodAverage!.Value;
-            if (gap >= 1.0m)
-            {
-                WriteLine();
-                WriteLine("A small pattern: you've felt better on nights with more sleep. Open Weekly review for more.");
-            }
-            else if (gap <= -1.0m)
-            {
-                WriteLine();
-                WriteLine("A small pattern: you've felt better on shorter-sleep nights. Open Weekly review for more.");
-            }
+            WriteLine();
+            WriteLine(summary.TeaserDirection == SleepTeaserDirection.MoreSleepBetter
+                ? "A small pattern: you've felt better on nights with more sleep. Open Weekly review for more."
+                : "A small pattern: you've felt better on shorter-sleep nights. Open Weekly review for more.");
         }
     }
 
@@ -185,28 +179,28 @@ internal static class Program
         }
     }
 
-    private static void ShowWeeklyReview(WellbeingJournal journal)
+    private static void ShowWeeklyReview(InsightsService insights)
     {
         var now = DateTimeOffset.Now;
-        var weekDays = journal.Last7Days(now);
+        var summary = insights.Summarize(now);
 
         WriteLine();
-        if (weekDays.Count == 0)
+        if (!summary.HasWeekData)
         {
             WriteLine("Not enough check-ins yet — your weekly review will appear here once you've logged a few days.");
             return;
         }
 
         WriteLine("Your week");
-        WriteLine($"  Mood     avg {Average(journal.Average(c => c.Mood, 7, now))}   (last 7 days)");
-        WriteLine($"  Energy   avg {Average(journal.Average(c => c.Energy, 7, now))}");
-        WriteLine($"  Sleep    avg {AverageHours(journal.Average(c => c.Sleep, 7, now))}");
-        WriteLine($"  {StreakMessage(journal.StreakDays(now))}");
+        WriteLine($"  Mood     avg {Average(summary.MoodAverage)}   (last 7 days)");
+        WriteLine($"  Energy   avg {Average(summary.EnergyAverage)}");
+        WriteLine($"  Sleep    avg {AverageHours(summary.SleepAverage)}");
+        WriteLine($"  {StreakMessage(summary.StreakDays)}");
 
-        var brightest = journal.BestDay(c => c.Mood, 7, now);
-        var hardest = journal.WorstDay(c => c.Mood, 7, now);
-        if (brightest is not null && hardest is not null && brightest.Date != hardest.Date)
+        if (summary.HasHighlights)
         {
+            var brightest = summary.BrightestDay!;
+            var hardest = summary.HardestDay!;
             WriteLine();
             WriteLine($"  Brightest day  {FormatDay(brightest)}    mood {Scale(brightest.Mood)}   energy {Scale(brightest.Energy)}   sleep {Hours(brightest.Sleep)}");
             WriteLine($"  Hardest day    {FormatDay(hardest)}     mood {Scale(hardest.Mood)}   energy {Scale(hardest.Energy)}   sleep {Hours(hardest.Sleep)}");
@@ -214,7 +208,7 @@ internal static class Program
 
         WriteLine();
         WriteLine("A small pattern");
-        var pattern = journal.SleepMoodPattern(30, WellbeingJournal.DefaultSleepThresholdHours, now);
+        var pattern = summary.SleepMood;
         if (pattern.IsConfident)
         {
             var longAvg = pattern.LongSleepMoodAverage!.Value;
