@@ -17,3 +17,6 @@ publish/
 # OS junk
 Thumbs.db
 .DS_Store
+
+# Brainstorm visual companion (scratch mockups)
+.superpowers/
