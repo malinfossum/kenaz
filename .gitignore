@@ -20,3 +20,6 @@ Thumbs.db
 
 # Brainstorm visual companion (scratch mockups)
 .superpowers/
+
+# Web app build output (derived from Kenaz.Web — never source)
+Kenaz.Api/wwwroot/

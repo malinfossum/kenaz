@@ -1,0 +1,74 @@
+/* ======================================================================
+   style.css — ULTRA MINIMAL DARK MODE
+   SAFE TO EDIT
+   - Keep this file tiny to reduce distraction.
+   - Add only what the assignment needs.
+   ====================================================================== */
+
+:root {
+	color-scheme: dark;
+	--bg: #0b0f14;
+	--panel: #0f1620;
+	--text: #e7edf5;
+	--muted: #98a6b7;
+	--border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	height: 100%;
+	margin: 0;
+	font-family:
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		Segoe UI,
+		Roboto,
+		Arial;
+	background: var(--bg);
+	color: var(--text);
+}
+
+/* Top-centered layout (focus) */
+.app {
+	min-height: 100%;
+	display: grid;
+	justify-items: center;
+	align-content: start;
+	padding: 18px 14px;
+}
+
+.shell {
+	width: min(720px, 100%);
+	display: grid;
+	gap: 10px;
+}
+
+.header {
+	text-align: center;
+}
+.title {
+	margin: 0;
+	font-size: 22px;
+	letter-spacing: 0.2px;
+}
+.subtitle {
+	margin: 6px 0 0;
+	color: var(--muted);
+	font-size: 14px;
+}
+
+.card {
+	border: 1px solid var(--border);
+	background: var(--panel);
+	border-radius: 14px;
+	padding: 16px;
+}
+
+/* Optional helper (use when needed)
+.muted { color: var(--muted); }
+*/

@@ -1,0 +1,16 @@
+<!--
+	Inline theme init — paste this into the <head> of every scaffold's index.html
+	BEFORE any <link rel="stylesheet"> tag.
+
+	Why inline: an external script causes a "flash of light theme" on first paint
+	because the script runs after the stylesheets are parsed. An inline <script>
+	in <head> runs synchronously and sets data-theme before the page is rendered.
+
+	Default is dark (matches design-system principle). User's saved choice wins.
+-->
+<script>
+	(function () {
+		var saved = localStorage.getItem("theme");
+		document.documentElement.dataset.theme = saved || "dark";
+	})();
+</script>

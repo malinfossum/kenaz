@@ -1,0 +1,92 @@
+:root {
+	color-scheme: dark;
+
+	--surface-1: #000000;
+	--surface-2: #0a0d10;
+	--surface-3: #11161b;
+	--surface-4: #171d24;
+	--surface-5: #1d252d;
+
+	--text: #f4f7fa;
+	--text-muted: #b4bdc7;
+	--text-faint: #87919c;
+
+	--border: #232c35;
+	--border-strong: #313c48;
+	--border-soft: #1a2128;
+	--line: rgba(255, 255, 255, 0.06);
+
+	--accent: #7c9ab3;
+	--accent-strong: #90adc5;
+	--accent-soft: rgba(124, 154, 179, 0.16);
+	--accent-ghost: rgba(124, 154, 179, 0.08);
+
+	--secondary: #a08f78;
+	--secondary-soft: rgba(160, 143, 120, 0.14);
+
+	--success: #7d9e8a;
+	--warning: #a79a74;
+	--danger: #a1837f;
+	--info: #7f92a3;
+
+	--success-soft: rgba(125, 158, 138, 0.15);
+	--warning-soft: rgba(167, 154, 116, 0.16);
+	--danger-soft: rgba(161, 131, 127, 0.16);
+	--info-soft: rgba(127, 146, 163, 0.16);
+
+	--focus-ring: rgba(144, 173, 197, 0.38);
+	--selection: rgba(124, 154, 179, 0.22);
+
+	--page-bg: var(--surface-1);
+	--panel-bg: var(--surface-2);
+	--card-bg: var(--surface-3);
+	--elevated-bg: var(--surface-4);
+	--interactive-bg: var(--surface-4);
+}
+
+:root[data-theme="light"],
+body.light {
+	color-scheme: light;
+
+	--surface-1: #f6f8fa;
+	--surface-2: #ffffff;
+	--surface-3: #f3f6f8;
+	--surface-4: #ebf0f4;
+	--surface-5: #e2e8ee;
+
+	--text: #10161d;
+	--text-muted: #52606d;
+	--text-faint: #6f7b87;
+
+	--border: #d8dee4;
+	--border-strong: #c5ced6;
+	--border-soft: #e8edf2;
+	--line: rgba(16, 22, 29, 0.08);
+
+	--accent: #5f7890;
+	--accent-strong: #526a81;
+	--accent-soft: rgba(95, 120, 144, 0.14);
+	--accent-ghost: rgba(95, 120, 144, 0.08);
+
+	--secondary: #8d795f;
+	--secondary-soft: rgba(141, 121, 95, 0.12);
+
+	--success: #5e7f6b;
+	--warning: #877c57;
+	--danger: #876560;
+	--info: #66798b;
+
+	--success-soft: rgba(94, 127, 107, 0.12);
+	--warning-soft: rgba(135, 124, 87, 0.12);
+	--danger-soft: rgba(135, 101, 96, 0.12);
+	--info-soft: rgba(102, 121, 139, 0.12);
+
+	--focus-ring: rgba(95, 120, 144, 0.28);
+	--selection: rgba(95, 120, 144, 0.18);
+
+	--page-bg: var(--surface-1);
+	--panel-bg: var(--surface-2);
+	--card-bg: var(--surface-2);
+	--elevated-bg: var(--surface-3);
+	--interactive-bg: var(--surface-4);
+}
