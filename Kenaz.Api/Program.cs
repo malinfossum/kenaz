@@ -29,6 +29,11 @@ var app = builder.Build();
 // Unhandled storage failures → bodyless 500 (no developer exception page, no stack trace over the wire).
 app.UseExceptionHandler(b => b.Run(ctx => { ctx.Response.StatusCode = 500; return Task.CompletedTask; }));
 
+// Serve the built Kenaz.Web app (wwwroot) same-origin. The shell + assets are NOT
+// token-guarded — they hold no secrets and Setup must load before a token exists.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapGroup("/checkins")
    .AddEndpointFilter<BearerTokenFilter>()
    .MapCheckInEndpoints();
@@ -36,6 +41,10 @@ app.MapGroup("/checkins")
 app.MapGroup("/insights")
    .AddEndpointFilter<BearerTokenFilter>()
    .MapInsightsEndpoints();
+
+// Any non-API path renders the SPA shell. API groups are mapped above, so they win;
+// everything else falls through to index.html (client-side handles the rest).
+app.MapFallbackToFile("index.html");
 
 // Token printed to stdout ONLY — never through ILogger / any log sink.
 Console.WriteLine($"Kenaz API → http://127.0.0.1:{port}  (Authorization: Bearer {token})");
