@@ -19,14 +19,17 @@ export function createController({ model, view }) {
 	}
 
 	async function refresh() {
-		const [checkInsResult, insightsResult] = await Promise.allSettled([api.getCheckIns(), api.getInsights()])
+		const [checkInsResult, insightsResult] = await Promise.allSettled([
+			api.getCheckIns(),
+			api.getInsights(),
+		])
 
 		// A 401 or unreachable from either call takes over the whole screen.
 		const blocking = [checkInsResult, insightsResult].find(
 			(r) =>
 				r.status === "rejected" &&
 				r.reason instanceof ApiError &&
-				(r.reason.kind === "unauthorized" || r.reason.kind === "unreachable"),
+				(r.reason.kind === "unauthorized" || r.reason.kind === "unreachable")
 		)
 		if (blocking) {
 			routeError(blocking.reason)
@@ -143,8 +146,10 @@ export function createController({ model, view }) {
 /** Mirrors CheckIn.Validate so the user gets instant feedback; the 400 is the backstop. */
 function validate({ mood, energy, sleep, note }) {
 	if (mood != null && (mood < 1 || mood > 10)) return "Mood must be between 1 and 10 when provided."
-	if (energy != null && (energy < 1 || energy > 10)) return "Energy must be between 1 and 10 when provided."
-	if (sleep != null && (sleep < 0 || sleep > 24)) return "Sleep must be between 0 and 24 hours when provided."
+	if (energy != null && (energy < 1 || energy > 10))
+		return "Energy must be between 1 and 10 when provided."
+	if (sleep != null && (sleep < 0 || sleep > 24))
+		return "Sleep must be between 0 and 24 hours when provided."
 	if (mood == null && energy == null && sleep == null && !(note && note.trim()))
 		return "A check-in needs at least one of: mood, energy, sleep, or a note."
 	return null

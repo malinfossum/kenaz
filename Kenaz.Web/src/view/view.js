@@ -131,8 +131,8 @@ function renderTabbar(active) {
 					dataset: { tab: tab.id },
 					"aria-current": isActive ? "page" : null,
 				},
-				tab.label,
-			),
+				tab.label
+			)
 		)
 	}
 	return nav
@@ -143,7 +143,7 @@ function renderOfflineBanner() {
 		"div",
 		{ class: "offline-banner alert alert-danger", role: "alert" },
 		el("span", {}, "Can't reach Kenaz. Is the app running?"),
-		el("button", { class: "btn btn-ghost", type: "button", "data-action": "retry" }, "Retry"),
+		el("button", { class: "btn btn-ghost", type: "button", "data-action": "retry" }, "Retry")
 	)
 }
 
@@ -152,7 +152,7 @@ function renderNotice(message) {
 		"div",
 		{ class: "offline-banner alert alert-danger", role: "alert" },
 		el("span", {}, message),
-		el("button", { class: "btn btn-ghost", type: "button", "data-action": "retry" }, "Retry"),
+		el("button", { class: "btn btn-ghost", type: "button", "data-action": "retry" }, "Retry")
 	)
 }
 

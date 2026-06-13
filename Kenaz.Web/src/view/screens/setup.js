@@ -11,7 +11,7 @@ export function renderSetup(state) {
 			el(
 				"p",
 				{ class: "text-muted" },
-				"Paste the token Kenaz printed when it started. You can also find it in %APPDATA%\\Kenaz\\api-token.",
+				"Paste the token Kenaz printed when it started. You can also find it in %APPDATA%\\Kenaz\\api-token."
 			),
 			state.setupError ? el("p", { class: "form-error", role: "alert" }, state.setupError) : null,
 			el(
@@ -29,10 +29,10 @@ export function renderSetup(state) {
 						autocomplete: "off",
 						autocapitalize: "off",
 						"data-autofocus": "",
-					}),
+					})
 				),
-				el("button", { class: "btn btn-primary btn-full", type: "submit" }, "Connect"),
-			),
-		),
+				el("button", { class: "btn btn-primary btn-full", type: "submit" }, "Connect")
+			)
+		)
 	)
 }
