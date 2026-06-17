@@ -2,7 +2,7 @@
 
 A private, local-first daily wellbeing check-in: log mood, energy, and sleep, and see your patterns over time. *Bring it into the light.*
 
-C# solution with a domain core, a console front-end, a loopback HTTP API, and an NUnit test project — built around a SQLite store, with a mobile-first PWA on the roadmap.
+C# solution with a domain core, a console front-end, a loopback HTTP API, and an NUnit test project — built around a SQLite store, with a mobile-first web app (M6.1).
 
 ## The name
 
@@ -16,7 +16,7 @@ To me, Kenaz is about consistency, reflection, and the self-care that lets you b
 
 - `Kenaz.Core` — domain model, rules, and insights. No `Console`; file IO is isolated to the storage adapters behind a repository interface.
 - `Kenaz.Console` — console front-end; calls into `Kenaz.Core`.
-- `Kenaz.Api` — loopback HTTP API over the same check-ins (M5); groundwork for the upcoming PWA, not part of daily use yet.
+- `Kenaz.Api` — loopback HTTP API over the same check-ins (M5); also serves the web app (M6.1).
 - `Kenaz.Tests` — NUnit; references `Kenaz.Core` and `Kenaz.Api`.
 
 ## Run
@@ -31,7 +31,7 @@ In the app you can check in for today (mood, energy, sleep, and a note — each 
 
 ## Local API (M5)
 
-Kenaz includes an optional loopback HTTP API over the same check-ins — groundwork for an upcoming mobile-first PWA, not part of daily use yet.
+Kenaz includes an optional loopback HTTP API over the same check-ins; it also serves the mobile-first web app described below.
 
 ```powershell
 dotnet run --project Kenaz.Api
@@ -48,6 +48,16 @@ Endpoints (all requiring `Authorization: Bearer <token>`, where `{date}` is `yyy
 | `PUT` | `/checkins/{date}` | Create or update a day |
 | `DELETE` | `/checkins/{date}` | Remove a day (`404` if absent) |
 | `GET` | `/insights` | Computed insights: 7-day averages, streak, highlights, sleep–mood pattern (read-only) |
+
+## Web app (M6.1)
+
+Kenaz ships a small web app served by the same loopback API.
+
+1. Build it once: `npm install` then `npm run build` inside `Kenaz.Web/` (output goes to `Kenaz.Api/wwwroot/`, which is git-ignored).
+2. Run the API: `dotnet run --project Kenaz.Api`.
+3. Open `http://127.0.0.1:5247`. On first run, paste the token from the API's startup banner (or `%APPDATA%\Kenaz\api-token`); it's stored once in the browser.
+
+Then check in for today, browse and edit history, and read your weekly review — all over the same loopback, token-guarded API. For development with hot-reload, run `npm run dev` in `Kenaz.Web/` (it proxies `/checkins` and `/insights` to the running API).
 
 ## Data
 
