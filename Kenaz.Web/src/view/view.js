@@ -67,16 +67,20 @@ export function createView(root) {
 		lastScreenKey = screenKey
 	}
 
-	// An element asking for focus (form error, delete-confirm Cancel, token field) wins; otherwise
-	// move focus to the screen top ONLY when the screen itself changed — so an in-screen re-render
-	// (validation, delete-confirm) never yanks focus away.
+	// An element asking for focus (form error, delete-confirm Cancel, token field) wins. Otherwise move
+	// focus to the screen top when the screen changed, or when the previous render stranded focus on the
+	// body: clear() detaches the focused node, so a same-screen re-render with no [data-autofocus] (the
+	// post-connect data load, or opening an inline edit) would otherwise leave focus nowhere. A re-render
+	// that keeps focus on a live control (validation, delete-confirm) sets [data-autofocus] and is handled
+	// by the early return above, so this never yanks focus mid-interaction.
 	function manageFocus(screenKey) {
 		const wanted = root.querySelector("[data-autofocus]")
 		if (wanted) {
 			wanted.focus({ preventScroll: true })
 			return
 		}
-		if (screenKey !== lastScreenKey) {
+		const focusStranded = !document.activeElement || document.activeElement === document.body
+		if (screenKey !== lastScreenKey || focusStranded) {
 			const screen = root.querySelector("[data-screen]")
 			if (screen) screen.focus({ preventScroll: true })
 		}
