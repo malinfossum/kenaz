@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <!-- Security pin (CVE-2025-6965): Microsoft.Data.Sqlite transitively pulls SQLitePCLRaw
+         2.1.11, whose bundled SQLite (< 3.50.2) has a high-severity memory-corruption bug.
+         bundle_e_sqlite3 3.0.3 carries the patched native lib (SQLite >= 3.50.2). Remove this
+         once a Microsoft.Data.Sqlite release ships the patched SQLite itself. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
   </ItemGroup>
 
   <ItemGroup>
