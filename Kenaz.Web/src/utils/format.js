@@ -34,9 +34,9 @@ export function hours(value) {
 	return value == null ? "—" : `${Number(value).toFixed(1).replace(/\.0$/, "")} h`
 }
 
-/** A compact "M7 · E6 · S6.5" line for a check-in row. */
-export function mes(checkIn) {
-	return `M${scale(checkIn.mood)} · E${scale(checkIn.energy)} · S${checkIn.sleep == null ? "—" : hours(checkIn.sleep)}`
+/** A readable "mood 7 · energy 6 · sleep 8 h" line for a check-in (em dash where skipped). */
+export function metrics(checkIn) {
+	return `mood ${scale(checkIn.mood)} · energy ${scale(checkIn.energy)} · sleep ${checkIn.sleep == null ? "—" : hours(checkIn.sleep)}`
 }
 
 /** First `max` chars of a note, trimmed, with an ellipsis; empty string when no note. */

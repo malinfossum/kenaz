@@ -12,7 +12,7 @@ export function createModel() {
 		today: null, // today's CheckInResponse, or null
 		insights: null, // InsightsResponse, or null
 		editingDate: null, // History: the date whose form is open inline, or null
-		confirmingDelete: null, // History: the date awaiting delete-confirm, or null
+		confirmingDelete: null, // History: the date awaiting delete-confirm (inside the edit form), or null
 		formError: null, // check-in form validation message
 		notice: null, // app-level operational error (500 / unexpected) — shown as a top banner
 		connection: "ok", // "ok" | "unreachable"
@@ -69,8 +69,8 @@ export function createModel() {
 			notify()
 		},
 		setConfirmingDelete(date) {
+			// Keeps editingDate set — the confirm lives inside the open edit form.
 			state.confirmingDelete = date
-			state.editingDate = null
 			notify()
 		},
 		setFormError(message) {

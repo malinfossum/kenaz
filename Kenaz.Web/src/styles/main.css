@@ -75,18 +75,45 @@
 	width: 100%;
 }
 
+/* Metric header: label + live value grouped left, Skip pill right — they never crowd each other. */
+.metric-head {
+	flex-wrap: nowrap;
+}
+
+.metric-label {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--space-2);
+}
+
 .slider-value {
 	font-variant-numeric: tabular-nums;
 	color: var(--text);
+	font-weight: 600;
 }
 
+/* Skip toggle as a pill that lights up when active. */
 .skip-toggle {
 	display: inline-flex;
 	align-items: center;
-	gap: var(--space-1);
+	gap: var(--space-2);
+	padding: var(--space-1) var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-pill);
 	font-size: var(--text-sm);
 	color: var(--text-muted);
 	cursor: pointer;
+	user-select: none;
+}
+
+.skip-toggle input {
+	accent-color: var(--accent);
+}
+
+.skip-toggle:has(input:checked) {
+	border-color: var(--accent);
+	color: var(--text);
+	background: var(--accent-ghost);
 }
 
 .form-error {
@@ -112,27 +139,24 @@
 
 .history-row {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
+	justify-content: space-between;
 	gap: var(--space-2);
-}
-
-.history-main {
-	flex: 1;
-	display: grid;
-	gap: var(--space-1);
-	text-align: left;
 	padding: var(--space-3);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-md);
 	background: var(--card-bg);
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
 }
 
-.history-main:hover {
-	border-color: var(--border-strong);
-	background: var(--elevated-bg);
+.history-main {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.history-row .icon-btn {
+	min-height: 2.75rem;
+	font-size: var(--text-lg);
+	color: var(--text-muted);
 }
 
 .history-date {

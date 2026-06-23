@@ -1,5 +1,5 @@
 import { el } from "../../utils/dom.js"
-import { formatDate, mes, snippet } from "../../utils/format.js"
+import { formatDate, metrics, snippet } from "../../utils/format.js"
 import { renderCheckInForm } from "./form.js"
 
 export function renderHistory(state) {
@@ -15,6 +15,8 @@ export function renderHistory(state) {
 				checkIn,
 				error: state.formError,
 				showCancel: true,
+				showDelete: true,
+				confirmingDelete: state.confirmingDelete === state.editingDate,
 			})
 		)
 	}
@@ -35,62 +37,34 @@ export function renderHistory(state) {
 	const list = el(
 		"ul",
 		{ class: "history-list" },
-		...state.checkIns.map((c) => renderRow(c, state.confirmingDelete === c.date))
+		...state.checkIns.map((c) => renderRow(c))
 	)
 	return el("div", { class: "stack" }, el("h1", {}, "History"), list)
 }
 
-function renderRow(checkIn, confirming) {
+function renderRow(checkIn) {
+	const date = checkIn.date
 	const note = snippet(checkIn.note, 40)
-	const main = el(
-		"button",
-		{
-			class: "history-main",
-			type: "button",
-			"data-action": "edit-checkin",
-			dataset: { date: checkIn.date },
-		},
-		el("span", { class: "history-date" }, formatDate(checkIn.date)),
-		note ? el("span", { class: "history-note text-faint" }, note) : null,
-		el("span", { class: "history-values" }, mes(checkIn))
+	return el(
+		"li",
+		{ class: "history-row" },
+		el(
+			"div",
+			{ class: "history-main" },
+			el("span", { class: "history-date" }, formatDate(date)),
+			note ? el("span", { class: "history-note text-faint" }, note) : null,
+			el("span", { class: "history-values" }, metrics(checkIn))
+		),
+		el(
+			"button",
+			{
+				class: "icon-btn",
+				type: "button",
+				"data-action": "edit-checkin",
+				dataset: { date },
+				"aria-label": `Edit the check-in for ${formatDate(date)}`,
+			},
+			"✎"
+		)
 	)
-
-	const controls = confirming
-		? el(
-				"span",
-				{ class: "cluster-sm" },
-				el(
-					"button",
-					{
-						class: "btn btn-danger",
-						type: "button",
-						"data-action": "delete-checkin",
-						dataset: { date: checkIn.date },
-					},
-					"Delete"
-				),
-				el(
-					"button",
-					{
-						class: "btn btn-ghost",
-						type: "button",
-						"data-action": "cancel-delete",
-						"data-autofocus": "",
-					},
-					"Cancel"
-				)
-			)
-		: el(
-				"button",
-				{
-					class: "icon-btn",
-					type: "button",
-					"data-action": "ask-delete",
-					dataset: { date: checkIn.date },
-					"aria-label": `Delete the check-in for ${formatDate(checkIn.date)}`,
-				},
-				"✕"
-			)
-
-	return el("li", { class: "history-row" }, main, controls)
 }

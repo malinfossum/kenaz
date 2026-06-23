@@ -10,8 +10,17 @@ import { el } from "../../utils/dom.js"
  * @param {object|null} opts.checkIn    existing CheckInResponse to pre-fill, or null
  * @param {string|null} opts.error      validation message to show, or null
  * @param {boolean} [opts.showCancel]   show a Cancel button (History-edit)
+ * @param {boolean} [opts.showDelete]   show a Delete button (History-edit)
+ * @param {boolean} [opts.confirmingDelete]  swap the buttons for a delete confirmation
  */
-export function renderCheckInForm({ date, checkIn, error, showCancel = false }) {
+export function renderCheckInForm({
+	date,
+	checkIn,
+	error,
+	showCancel = false,
+	showDelete = false,
+	confirmingDelete = false,
+}) {
 	// Existing check-in: mood/energy may be null (skipped). New check-in: default 5, not skipped.
 	const moodValue = checkIn ? checkIn.mood : 5
 	const energyValue = checkIn ? checkIn.energy : 5
@@ -47,21 +56,44 @@ export function renderCheckInForm({ date, checkIn, error, showCancel = false }) 
 				checkIn?.note ?? ""
 			)
 		),
-		error
+		!confirmingDelete && error
 			? el("p", { class: "form-error", role: "alert", tabindex: "-1", "data-autofocus": "" }, error)
 			: null,
-		el(
-			"div",
-			{ class: "cluster" },
-			el("button", { class: "btn btn-primary", type: "submit" }, checkIn ? "Update" : "Save"),
-			showCancel
-				? el(
-						"button",
-						{ class: "btn btn-ghost", type: "button", "data-action": "cancel-edit" },
-						"Cancel"
+		confirmingDelete
+			? el(
+					"div",
+					{ class: "stack stack-sm" },
+					el(
+						"p",
+						{ role: "alert", tabindex: "-1", "data-autofocus": "" },
+						"Delete this check-in? This can't be undone."
+					),
+					el(
+						"div",
+						{ class: "cluster" },
+						el(
+							"button",
+							{ class: "btn btn-danger", type: "button", "data-action": "delete-checkin", dataset: { date } },
+							"Delete"
+						),
+						el("button", { class: "btn btn-ghost", type: "button", "data-action": "cancel-delete" }, "Cancel")
 					)
-				: null
-		)
+				)
+			: el(
+					"div",
+					{ class: "cluster" },
+					el("button", { class: "btn btn-primary", type: "submit" }, checkIn ? "Update" : "Save"),
+					showCancel
+						? el("button", { class: "btn btn-ghost", type: "button", "data-action": "cancel-edit" }, "Cancel")
+						: null,
+					showDelete
+						? el(
+								"button",
+								{ class: "btn btn-danger", type: "button", "data-action": "ask-delete", dataset: { date } },
+								"Delete"
+							)
+						: null
+				)
 	)
 }
 
@@ -76,28 +108,28 @@ function metricField(label, name, value) {
 		{ class: "field" },
 		el(
 			"div",
-			{ class: "cluster-between" },
-			el("label", { class: "label", for: name }, label),
+			{ class: "cluster-between metric-head" },
 			el(
 				"span",
-				{ class: "cluster-sm" },
+				{ class: "metric-label" },
+				el("label", { class: "label", for: name }, label),
 				el(
 					"output",
 					{ class: "slider-value", id: outId, for: name },
 					skipped ? "—" : String(sliderValue)
-				),
-				el(
-					"label",
-					{ class: "skip-toggle" },
-					el("input", {
-						type: "checkbox",
-						name: `${name}-skip`,
-						dataset: { skip: name },
-						checked: skipped,
-						"aria-label": `Skip ${label.toLowerCase()}`,
-					}),
-					" Skip"
 				)
+			),
+			el(
+				"label",
+				{ class: "skip-toggle" },
+				el("input", {
+					type: "checkbox",
+					name: `${name}-skip`,
+					dataset: { skip: name },
+					checked: skipped,
+					"aria-label": `Skip ${label.toLowerCase()}`,
+				}),
+				el("span", {}, "Skip")
 			)
 		),
 		el("input", {

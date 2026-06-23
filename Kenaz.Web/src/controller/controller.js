@@ -10,7 +10,16 @@ export function createController({ model, view }) {
 	view.bindActions(handleAction)
 	model.subscribe(() => view.render(model.getState()))
 
+	// Phone/browser Back walks the tab history instead of leaving the app. A tab tap pushes a history
+	// entry (selectTab); Back fires popstate and we restore that entry's tab — without re-pushing.
+	window.addEventListener("popstate", (event) => {
+		const tab = event.state?.tab
+		if (tab) model.setActiveTab(tab)
+	})
+
 	async function init() {
+		// Seed the opening screen so it's part of the history the Back button walks.
+		history.replaceState({ tab: model.getState().activeTab }, "")
 		if (!api.hasToken()) {
 			model.requireSetup()
 			return
@@ -70,7 +79,7 @@ export function createController({ model, view }) {
 	async function handleAction(action, detail) {
 		switch (action) {
 			case "select-tab":
-				model.setActiveTab(detail.tab)
+				selectTab(detail.tab)
 				break
 			case "save-token": {
 				const token = (detail.token ?? "").trim()
@@ -108,6 +117,14 @@ export function createController({ model, view }) {
 		}
 	}
 
+	// A tab tap records a history entry so Back returns to the previous tab, not out of the app.
+	// (Restoring on Back goes through model.setActiveTab directly — see the popstate listener.)
+	function selectTab(tab) {
+		if (tab === model.getState().activeTab) return
+		history.pushState({ tab }, "")
+		model.setActiveTab(tab)
+	}
+
 	async function saveCheckIn(detail) {
 		const error = validate(detail)
 		if (error) {
@@ -132,7 +149,7 @@ export function createController({ model, view }) {
 	async function deleteCheckIn(date) {
 		try {
 			await api.deleteCheckIn(date)
-			model.setConfirmingDelete(null)
+			model.setEditingDate(null) // leave the edit form; the entry is gone
 			await refresh()
 			view.announce("Check-in deleted.")
 		} catch (err) {

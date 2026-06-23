@@ -11,8 +11,8 @@ import { renderReview } from "./screens/review.js"
 import { renderSetup } from "./screens/setup.js"
 
 const TABS = [
-	{ id: "today", label: "Today" },
 	{ id: "history", label: "History" },
+	{ id: "today", label: "Today" },
 	{ id: "review", label: "Review" },
 ]
 

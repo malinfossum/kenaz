@@ -8,7 +8,8 @@ export function renderToday(state) {
 		"div",
 		{ class: "stack" },
 		el("h1", {}, state.today ? "Today" : "Check in"),
-		renderCheckInForm({ date: today, checkIn: state.today, error: state.formError })
+		// A fresh form every render: submitting clears it (saved entries live in History).
+		renderCheckInForm({ date: today, checkIn: null, error: state.formError })
 	)
 	if (state.insights?.hasWeekData) wrap.append(renderGlance(state.insights))
 	return wrap
@@ -17,7 +18,7 @@ export function renderToday(state) {
 function renderGlance(insights) {
 	const card = el(
 		"div",
-		{ class: "card stack-sm" },
+		{ class: "card stack stack-sm" },
 		el("h2", {}, "Last 7 days"),
 		el(
 			"div",

@@ -1,5 +1,5 @@
 import { el } from "../../utils/dom.js"
-import { formatDate, avg, scale, hours } from "../../utils/format.js"
+import { formatDate, avg, hours, metrics } from "../../utils/format.js"
 
 export function renderReview(state) {
 	const ins = state.insights
@@ -30,7 +30,7 @@ export function renderReview(state) {
 function renderSummary(ins) {
 	return el(
 		"div",
-		{ class: "card stack-sm" },
+		{ class: "card stack stack-sm" },
 		el("h2", {}, "Your week"),
 		el(
 			"div",
@@ -55,19 +55,15 @@ function renderHighlights(ins) {
 function dayCard(label, day) {
 	return el(
 		"div",
-		{ class: "card stack-sm" },
+		{ class: "card stack stack-sm" },
 		el("span", { class: "stat-label" }, label),
 		el("span", { class: "history-date" }, formatDate(day.date)),
-		el(
-			"span",
-			{ class: "history-values" },
-			`mood ${scale(day.mood)} · energy ${scale(day.energy)} · sleep ${day.sleep == null ? "—" : hours(day.sleep)}`
-		)
+		el("span", { class: "history-values" }, metrics(day))
 	)
 }
 
 function renderPattern(ins) {
-	const card = el("div", { class: "card stack-sm" }, el("h2", {}, "Sleep & mood"))
+	const card = el("div", { class: "card stack stack-sm" }, el("h2", {}, "Sleep & mood"))
 	if (ins.sleepPatternConfident) {
 		const threshold = Number(ins.sleepThreshold).toFixed(1).replace(/\.0$/, "")
 		card.append(
