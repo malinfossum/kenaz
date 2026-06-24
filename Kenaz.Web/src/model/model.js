@@ -15,6 +15,7 @@ export function createModel() {
 		confirmingDelete: null, // History: the date awaiting delete-confirm (inside the edit form), or null
 		formError: null, // check-in form validation message
 		notice: null, // app-level operational error (500 / unexpected) — shown as a top banner
+		dataResult: null, // Data screen: last export/import status message, or null
 		connection: "ok", // "ok" | "unreachable"
 	}
 
@@ -35,6 +36,7 @@ export function createModel() {
 			state.confirmingDelete = null
 			state.formError = null
 			state.notice = null
+			state.dataResult = null
 			notify()
 		},
 
@@ -79,6 +81,10 @@ export function createModel() {
 		},
 		setNotice(message) {
 			state.notice = message
+			notify()
+		},
+		setDataResult(message) {
+			state.dataResult = message
 			notify()
 		},
 	}

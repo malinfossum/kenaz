@@ -9,11 +9,13 @@ import { renderToday } from "./screens/today.js"
 import { renderHistory } from "./screens/history.js"
 import { renderReview } from "./screens/review.js"
 import { renderSetup } from "./screens/setup.js"
+import { renderData } from "./screens/data.js"
 
 const TABS = [
 	{ id: "history", label: "History" },
 	{ id: "today", label: "Today" },
 	{ id: "review", label: "Review" },
+	{ id: "data", label: "Data" },
 ]
 
 export function createView(root) {
@@ -21,6 +23,12 @@ export function createView(root) {
 
 	// Clicks on anything carrying data-action (tabs, row edit, delete, retry…).
 	root.addEventListener("click", (event) => {
+		const trigger = event.target.closest("[data-trigger-import]")
+		if (trigger) {
+			event.preventDefault()
+			trigger.parentElement.querySelector("[data-import-file]")?.click()
+			return
+		}
 		const target = event.target.closest("[data-action]")
 		if (!target || !root.contains(target)) return
 		if (target.tagName === "FORM") return // a submit button's closest [data-action] is its form — let submit handle it
@@ -48,6 +56,12 @@ export function createView(root) {
 
 	// Skip toggles: enable/disable the matching slider and blank/restore its readout.
 	root.addEventListener("change", (event) => {
+		const fileEl = event.target.closest("[data-import-file]")
+		if (fileEl?.files?.length) {
+			onAction("import-data", { file: fileEl.files[0] })
+			fileEl.value = "" // allow re-importing the same file
+			return
+		}
 		const skip = event.target.closest("input[type=checkbox][data-skip]")
 		if (!skip) return
 		const slider = root.querySelector(`#${skip.dataset.skip}`)
@@ -118,6 +132,7 @@ function renderShell(state) {
 function screenFor(state) {
 	if (state.activeTab === "history") return renderHistory(state)
 	if (state.activeTab === "review") return renderReview(state)
+	if (state.activeTab === "data") return renderData(state)
 	return renderToday(state)
 }
 
