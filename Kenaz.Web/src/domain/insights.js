@@ -1,4 +1,4 @@
-import { MIN_DAYS_PER_BUCKET, PATTERN_DAYS, SLEEP_THRESHOLD, WEEK_DAYS } from "./constants.js"
+import { MIN_DAYS_PER_BUCKET, PATTERN_DAYS, SLEEP_THRESHOLD, TEASER_GAP, WEEK_DAYS } from "./constants.js"
 import { addDaysIso, todayIso, withinWindow } from "./dates.js"
 
 /** Mean of an array of numbers; null on empty. Caller filters out null fields first. */
@@ -78,5 +78,49 @@ export function sleepMoodPattern(checkIns, now) {
 		longSleepMoodAverage: average(long.map((c) => c.mood)),
 		shortSleepMoodAverage: average(short.map((c) => c.mood)),
 		isConfident: long.length >= MIN_DAYS_PER_BUCKET && short.length >= MIN_DAYS_PER_BUCKET,
+	}
+}
+
+function toHighlight(c) {
+	return c ? { date: c.date, mood: c.mood, energy: c.energy, sleep: c.sleep } : null
+}
+
+/** Build the 16-field Insights object the View consumes (Reference A). */
+export function computeInsights(checkIns, now = new Date()) {
+	const brightest = bestDay(checkIns, now)
+	const hardest = worstDay(checkIns, now)
+	const hasHighlights = !!brightest && !!hardest && brightest.date !== hardest.date
+
+	const p = sleepMoodPattern(checkIns, now)
+	let showSleepTeaser = false
+	let teaserDirection = "None"
+	if (p.isConfident && p.longSleepMoodAverage != null && p.shortSleepMoodAverage != null) {
+		const gap = p.longSleepMoodAverage - p.shortSleepMoodAverage
+		if (gap >= TEASER_GAP) {
+			showSleepTeaser = true
+			teaserDirection = "MoreSleepBetter"
+		} else if (gap <= -TEASER_GAP) {
+			showSleepTeaser = true
+			teaserDirection = "LessSleepBetter"
+		}
+	}
+
+	return {
+		moodAverage: averageField(checkIns, now, "mood"),
+		energyAverage: averageField(checkIns, now, "energy"),
+		sleepAverage: averageField(checkIns, now, "sleep"),
+		streakDays: streakDays(checkIns, now),
+		hasWeekData: last7Days(checkIns, now).length > 0,
+		brightestDay: hasHighlights ? toHighlight(brightest) : null,
+		hardestDay: hasHighlights ? toHighlight(hardest) : null,
+		hasHighlights,
+		sleepThreshold: p.threshold,
+		longSleepDays: p.longSleepDays,
+		shortSleepDays: p.shortSleepDays,
+		longSleepMoodAverage: p.longSleepMoodAverage,
+		shortSleepMoodAverage: p.shortSleepMoodAverage,
+		sleepPatternConfident: p.isConfident,
+		showSleepTeaser,
+		teaserDirection,
 	}
 }
