@@ -8,7 +8,6 @@ import { el, clear } from "../utils/dom.js"
 import { renderToday } from "./screens/today.js"
 import { renderHistory } from "./screens/history.js"
 import { renderReview } from "./screens/review.js"
-import { renderSetup } from "./screens/setup.js"
 import { renderData } from "./screens/data.js"
 
 const TABS = [
@@ -36,14 +35,12 @@ export function createView(root) {
 		onAction(target.dataset.action, { ...target.dataset })
 	})
 
-	// Form submits (the check-in form and the token form).
+	// Form submit (the check-in form).
 	root.addEventListener("submit", (event) => {
 		const form = event.target.closest("form[data-action]")
 		if (!form) return
 		event.preventDefault()
-		const action = form.dataset.action
-		if (action === "save-checkin") onAction(action, readCheckInForm(form))
-		else if (action === "save-token") onAction(action, { token: new FormData(form).get("token") })
+		if (form.dataset.action === "save-checkin") onAction("save-checkin", readCheckInForm(form))
 	})
 
 	// Live slider readouts (pure View affordance: reflect input value into its <output>).
@@ -54,7 +51,7 @@ export function createView(root) {
 		if (out) out.textContent = slider.value
 	})
 
-	// Skip toggles: enable/disable the matching slider and blank/restore its readout.
+	// Import file picker, plus the Skip toggles (enable/disable the matching slider + blank its readout).
 	root.addEventListener("change", (event) => {
 		const fileEl = event.target.closest("[data-import-file]")
 		if (fileEl?.files?.length) {
@@ -75,18 +72,17 @@ export function createView(root) {
 
 	function render(state) {
 		clear(root)
-		const screenKey = state.needsSetup ? "setup" : state.activeTab
-		root.append(state.needsSetup ? renderSetup(state) : renderShell(state))
-		manageFocus(screenKey)
-		lastScreenKey = screenKey
+		root.append(renderShell(state))
+		manageFocus(state.activeTab)
+		lastScreenKey = state.activeTab
 	}
 
-	// An element asking for focus (form error, delete-confirm Cancel, token field) wins. Otherwise move
-	// focus to the screen top when the screen changed, or when the previous render stranded focus on the
-	// body: clear() detaches the focused node, so a same-screen re-render with no [data-autofocus] (the
-	// post-connect data load, or opening an inline edit) would otherwise leave focus nowhere. A re-render
-	// that keeps focus on a live control (validation, delete-confirm) sets [data-autofocus] and is handled
-	// by the early return above, so this never yanks focus mid-interaction.
+	// An element asking for focus (form error, delete-confirm Cancel) wins. Otherwise move focus to the
+	// screen top when the screen changed, or when the previous render stranded focus on the body: clear()
+	// detaches the focused node, so a same-screen re-render with no [data-autofocus] (the post-load data
+	// refresh, or opening an inline edit) would otherwise leave focus nowhere. A re-render that keeps focus
+	// on a live control (validation, delete-confirm) sets [data-autofocus] and is handled by the early
+	// return above, so this never yanks focus mid-interaction.
 	function manageFocus(screenKey) {
 		const wanted = root.querySelector("[data-autofocus]")
 		if (wanted) {
@@ -118,7 +114,6 @@ export function createView(root) {
 function renderShell(state) {
 	const frag = document.createDocumentFragment()
 	frag.append(el("header", { class: "app-header" }, el("span", { class: "brand" }, "Kenaz")))
-	if (state.connection === "unreachable") frag.append(renderOfflineBanner())
 	if (state.notice) frag.append(renderNotice(state.notice))
 
 	const screen = el("div", { class: "screen", "data-screen": "", tabindex: "-1" })
@@ -155,15 +150,6 @@ function renderTabbar(active) {
 		)
 	}
 	return nav
-}
-
-function renderOfflineBanner() {
-	return el(
-		"div",
-		{ class: "offline-banner alert alert-danger", role: "alert" },
-		el("span", {}, "Can't reach Kenaz. Is the app running?"),
-		el("button", { class: "btn btn-ghost", type: "button", "data-action": "retry" }, "Retry")
-	)
 }
 
 function renderNotice(message) {

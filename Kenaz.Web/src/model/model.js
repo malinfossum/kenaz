@@ -5,18 +5,15 @@
 
 export function createModel() {
 	const state = {
-		activeTab: "today", // "today" | "history" | "review"
-		needsSetup: false, // show the Setup screen (no token, or after a 401)
-		setupError: null, // message under the token field
+		activeTab: "today", // "today" | "history" | "review" | "data"
 		checkIns: [], // CheckInResponse[] (newest first)
 		today: null, // today's CheckInResponse, or null
 		insights: null, // InsightsResponse, or null
 		editingDate: null, // History: the date whose form is open inline, or null
 		confirmingDelete: null, // History: the date awaiting delete-confirm (inside the edit form), or null
 		formError: null, // check-in form validation message
-		notice: null, // app-level operational error (500 / unexpected) — shown as a top banner
+		notice: null, // app-level operational error (e.g. storage read/write failure) — shown as a top banner
 		dataResult: null, // Data screen: last export/import status message, or null
-		connection: "ok", // "ok" | "unreachable"
 	}
 
 	const subscribers = []
@@ -40,27 +37,11 @@ export function createModel() {
 			notify()
 		},
 
-		requireSetup(error = null) {
-			state.needsSetup = true
-			state.setupError = error
-			notify()
-		},
-		clearSetup() {
-			state.needsSetup = false
-			state.setupError = null
-			notify()
-		},
-
 		setData({ checkIns, insights, today }) {
 			state.checkIns = checkIns
 			state.insights = insights
 			state.today = today
-			state.connection = "ok"
 			state.notice = null
-			notify()
-		},
-		setConnection(connection) {
-			state.connection = connection
 			notify()
 		},
 
