@@ -17,6 +17,6 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.12",
 		"vite": "^5.4.0",
-		"vitest": "^4.1.9"
+		"vitest": "^2.1.9"
 	}
 }
