@@ -890,6 +890,8 @@ export function parseImport(text) {
 
 ### Task B1: `store.js` (verify-by-running)
 
+> **Execution correction (2026-06-24):** the shipped `Kenaz.Web/src/store.js` uses a **transaction-safe** pattern — each op opens a transaction and issues all its requests synchronously (the read-modify-write issues its `put` inside the `get`'s `onsuccess`, still the transaction's active window), resolving on `tx.oncomplete`. The draft code below `await`ed between creating a transaction and using it, which risks `TransactionInactiveError` once IndexedDB auto-commits the transaction. The committed file is authoritative; the public API (`getCheckIns` / `putCheckIn` / `deleteCheckIn` / `putMany`) is unchanged, so Task C1 is unaffected.
+
 **Learning-mode first:** walk through IndexedDB — `open(name, version)`, the one-time `onupgradeneeded` where you create the object store, transactions, and why every call is async.
 
 **Files:**
