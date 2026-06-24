@@ -9,7 +9,8 @@ export class ImportError extends Error {
 	}
 }
 
-const pick = (obj, pascal, camel) => (obj[pascal] !== undefined ? obj[pascal] : obj[camel])
+const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k)
+const pick = (obj, pascal, camel) => (has(obj, pascal) ? obj[pascal] : has(obj, camel) ? obj[camel] : undefined)
 const orNull = (v) => (v === undefined ? null : v)
 
 /** Build the PascalCase export envelope (matches the C# JsonCheckInArchive). */

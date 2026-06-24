@@ -41,3 +41,6 @@ test("streak forgives a single gap", () => {
 test("streak breaks on two consecutive gaps", () => {
 	expect(streakDays([rec(TODAY), rec(back(3))], NOW)).toBe(1)
 })
+test("streak ignores a future-dated check-in", () => {
+	expect(streakDays([rec(TODAY), rec(addDaysIso(TODAY, 1))], NOW)).toBe(1)
+})
