@@ -6,6 +6,7 @@
 import { createModel } from "./model/model.js"
 import { createView } from "./view/view.js"
 import { createController } from "./controller/controller.js"
+import { setupPwa } from "./pwa.js"
 
 export function createApp() {
 	const root = document.getElementById("main")
@@ -16,4 +17,5 @@ export function createApp() {
 	const controller = createController({ model, view })
 
 	controller.init()
+	setupPwa()
 }
