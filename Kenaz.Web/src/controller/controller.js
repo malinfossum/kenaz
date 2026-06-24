@@ -6,6 +6,8 @@
 
 import { validateCheckIn } from "../domain/checkin.js"
 import { computeInsights } from "../domain/insights.js"
+import { parseImport, toExportDocument } from "../domain/archive.js"
+import { merge } from "../domain/merge.js"
 import { store } from "../store.js"
 import { isoToday } from "../utils/format.js"
 
@@ -108,9 +110,42 @@ export function createController({ model, view }) {
 		}
 	}
 
-	// Export/import wired in Phase D; the handlers below are filled there.
-	async function exportData() {}
-	async function importData(_file) {}
+	async function exportData() {
+		try {
+			const checkIns = await store.getCheckIns()
+			const doc = toExportDocument(checkIns, new Date())
+			const blob = new Blob([JSON.stringify(doc, null, 2)], { type: "application/json" })
+			const url = URL.createObjectURL(blob)
+			const stamp = isoToday()
+			const a = document.createElement("a")
+			a.href = url
+			a.download = `kenaz-backup-${stamp}.json`
+			a.click()
+			URL.revokeObjectURL(url)
+			model.setDataResult(`Exported ${checkIns.length} check-in(s).`)
+			view.announce("Check-ins exported.")
+		} catch {
+			model.setDataResult("Export failed. Try again.")
+		}
+	}
+
+	async function importData(file) {
+		if (!file) return
+		try {
+			const text = await file.text()
+			const { records, skipped } = parseImport(text)
+			const existing = await store.getCheckIns()
+			const result = merge(existing, records)
+			await store.putMany(result.records)
+			await refresh()
+			const parts = [`${result.added} added`, `${result.updated} updated`, `${result.unchanged} unchanged`]
+			if (skipped > 0) parts.push(`${skipped} skipped`)
+			model.setDataResult(`Import done — ${parts.join(", ")}.`)
+			view.announce("Import complete.")
+		} catch (err) {
+			model.setDataResult(err?.message ?? "Import failed.")
+		}
+	}
 
 	return { init }
 }
