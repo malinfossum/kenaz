@@ -1,4 +1,4 @@
-import { WEEK_DAYS } from "./constants.js"
+import { MIN_DAYS_PER_BUCKET, PATTERN_DAYS, SLEEP_THRESHOLD, WEEK_DAYS } from "./constants.js"
 import { addDaysIso, todayIso, withinWindow } from "./dates.js"
 
 /** Mean of an array of numbers; null on empty. Caller filters out null fields first. */
@@ -46,4 +46,37 @@ export function streakDays(checkIns, now) {
 		}
 	}
 	return streak
+}
+
+/** Day with the extreme mood in the 7-day window. dir: "max" | "min". Tie → most recent date. */
+function extremeDay(checkIns, now, dir) {
+	const candidates = last7Days(checkIns, now).filter((c) => c.mood != null)
+	if (candidates.length === 0) return null
+	candidates.sort((a, b) => {
+		if (a.mood !== b.mood) return dir === "max" ? b.mood - a.mood : a.mood - b.mood
+		return b.date.localeCompare(a.date) // tie: most recent first
+	})
+	return candidates[0]
+}
+
+export function bestDay(checkIns, now) {
+	return extremeDay(checkIns, now, "max")
+}
+export function worstDay(checkIns, now) {
+	return extremeDay(checkIns, now, "min")
+}
+
+/** 30-day sleep→mood comparison, bucketed at SLEEP_THRESHOLD (inclusive long side). */
+export function sleepMoodPattern(checkIns, now) {
+	const qualified = windowed(checkIns, now, PATTERN_DAYS).filter((c) => c.mood != null && c.sleep != null)
+	const long = qualified.filter((c) => c.sleep >= SLEEP_THRESHOLD)
+	const short = qualified.filter((c) => c.sleep < SLEEP_THRESHOLD)
+	return {
+		threshold: SLEEP_THRESHOLD,
+		longSleepDays: long.length,
+		shortSleepDays: short.length,
+		longSleepMoodAverage: average(long.map((c) => c.mood)),
+		shortSleepMoodAverage: average(short.map((c) => c.mood)),
+		isConfident: long.length >= MIN_DAYS_PER_BUCKET && short.length >= MIN_DAYS_PER_BUCKET,
+	}
 }
