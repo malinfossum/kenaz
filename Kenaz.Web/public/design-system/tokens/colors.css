@@ -16,26 +16,44 @@
 	--border-soft: #1a2128;
 	--line: rgba(255, 255, 255, 0.06);
 
-	--accent: #7c9ab3;
-	--accent-strong: #90adc5;
-	--accent-soft: rgba(124, 154, 179, 0.16);
-	--accent-ghost: rgba(124, 154, 179, 0.08);
+	/* Brand + semantic colors: the -rgb channel is the SINGLE SOURCE.
+	   The solid color and every translucent variant derive from it,
+	   so changing one channel cascades everywhere it is referenced. */
+	--accent-rgb: 124 154 179;
+	--accent-strong-rgb: 144 173 197;
+	--secondary-rgb: 160 143 120;
+	--success-rgb: 125 158 138;
+	--warning-rgb: 167 154 116;
+	--danger-rgb: 161 131 127;
+	--info-rgb: 127 146 163;
 
-	--secondary: #a08f78;
-	--secondary-soft: rgba(160, 143, 120, 0.14);
+	--accent: rgb(var(--accent-rgb));
+	--accent-strong: rgb(var(--accent-strong-rgb));
+	--accent-soft: rgb(var(--accent-rgb) / 16%);
+	--accent-ghost: rgb(var(--accent-rgb) / 8%);
 
-	--success: #7d9e8a;
-	--warning: #a79a74;
-	--danger: #a1837f;
-	--info: #7f92a3;
+	/* Solid-button ink — fill + text of .btn-primary only. Defaults derive
+	   from the accent; a palette with a mid-tone accent overrides these
+	   instead of changing its accent identity. */
+	--accent-solid: var(--accent);
+	--accent-solid-strong: var(--accent-strong);
+	--on-accent: #0a0d10;
 
-	--success-soft: rgba(125, 158, 138, 0.15);
-	--warning-soft: rgba(167, 154, 116, 0.16);
-	--danger-soft: rgba(161, 131, 127, 0.16);
-	--info-soft: rgba(127, 146, 163, 0.16);
+	--secondary: rgb(var(--secondary-rgb));
+	--secondary-soft: rgb(var(--secondary-rgb) / 14%);
 
-	--focus-ring: rgba(144, 173, 197, 0.38);
-	--selection: rgba(124, 154, 179, 0.22);
+	--success: rgb(var(--success-rgb));
+	--warning: rgb(var(--warning-rgb));
+	--danger: rgb(var(--danger-rgb));
+	--info: rgb(var(--info-rgb));
+
+	--success-soft: rgb(var(--success-rgb) / 15%);
+	--warning-soft: rgb(var(--warning-rgb) / 16%);
+	--danger-soft: rgb(var(--danger-rgb) / 16%);
+	--info-soft: rgb(var(--info-rgb) / 16%);
+
+	--focus-ring: rgb(var(--accent-strong-rgb) / 38%);
+	--selection: rgb(var(--accent-rgb) / 22%);
 
 	--page-bg: var(--surface-1);
 	--panel-bg: var(--surface-2);
@@ -63,26 +81,41 @@ body.light {
 	--border-soft: #e8edf2;
 	--line: rgba(16, 22, 29, 0.08);
 
-	--accent: #5f7890;
-	--accent-strong: #526a81;
-	--accent-soft: rgba(95, 120, 144, 0.14);
-	--accent-ghost: rgba(95, 120, 144, 0.08);
+	--accent-rgb: 95 120 144;
+	--accent-strong-rgb: 82 106 129;
+	--secondary-rgb: 141 121 95;
+	--success-rgb: 94 127 107;
+	--warning-rgb: 135 124 87;
+	--danger-rgb: 135 101 96;
+	--info-rgb: 102 121 139;
 
-	--secondary: #8d795f;
-	--secondary-soft: rgba(141, 121, 95, 0.12);
+	--accent: rgb(var(--accent-rgb));
+	--accent-strong: rgb(var(--accent-strong-rgb));
+	--accent-soft: rgb(var(--accent-rgb) / 14%);
+	--accent-ghost: rgb(var(--accent-rgb) / 8%);
 
-	--success: #5e7f6b;
-	--warning: #877c57;
-	--danger: #876560;
-	--info: #66798b;
+	/* Light accents are mid-tone: white on var(--accent) is only 4.59:1, so the
+	   solid fill steps down to the strong accent and hover mixes deeper still.
+	   Both stay derived — palettes inherit these and must resolve to their own ramp. */
+	--accent-solid: var(--accent-strong);
+	--accent-solid-strong: color-mix(in srgb, var(--accent-strong) 84%, black);
+	--on-accent: #ffffff;
 
-	--success-soft: rgba(94, 127, 107, 0.12);
-	--warning-soft: rgba(135, 124, 87, 0.12);
-	--danger-soft: rgba(135, 101, 96, 0.12);
-	--info-soft: rgba(102, 121, 139, 0.12);
+	--secondary: rgb(var(--secondary-rgb));
+	--secondary-soft: rgb(var(--secondary-rgb) / 12%);
 
-	--focus-ring: rgba(95, 120, 144, 0.28);
-	--selection: rgba(95, 120, 144, 0.18);
+	--success: rgb(var(--success-rgb));
+	--warning: rgb(var(--warning-rgb));
+	--danger: rgb(var(--danger-rgb));
+	--info: rgb(var(--info-rgb));
+
+	--success-soft: rgb(var(--success-rgb) / 12%);
+	--warning-soft: rgb(var(--warning-rgb) / 12%);
+	--danger-soft: rgb(var(--danger-rgb) / 12%);
+	--info-soft: rgb(var(--info-rgb) / 12%);
+
+	--focus-ring: rgb(var(--accent-rgb) / 28%);
+	--selection: rgb(var(--accent-rgb) / 18%);
 
 	--page-bg: var(--surface-1);
 	--panel-bg: var(--surface-2);
