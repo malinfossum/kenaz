@@ -193,15 +193,27 @@ Registered with one `@import` line in `tokens/palettes/index.css`.
 
 ### The version gap
 
-Kenaz.Web carries design-system **1.0.0**; canonical is **2.0.1**. The `data-palette` mechanism
+Kenaz.Web carries design-system **1.0.0**; canonical is **2.0.2**. The `data-palette` mechanism
 does not exist before 2.0, so the palette approach requires upgrading Kenaz first, via
 `node tools/extract.mjs design-system <target>`.
 
 The base tokens are compatible — `--surface-*`, `--text*` and `--border*` are byte-identical
-between the two versions, and 2.0.1's changes are additive: `-rgb` single-source channels,
-`--accent-solid`, `--on-accent`, the palettes and type-skin layers, and new `skeleton`, `tabs`
-and `toast` components. But it is a major bump, and Kenaz is live and installed, so the upgrade
-needs a visual pass across all four screens before it ships rather than an assumption of safety.
+between the two versions, and 2.0's changes are otherwise additive: `-rgb` single-source
+channels, `--accent-solid`, `--on-accent`, the palettes and type-skin layers, and new
+`skeleton`, `tabs` and `toast` components.
+
+Two things are **not** purely additive, and the visual pass should expect them:
+
+- **Controls get 2px taller.** 2.0.2 is an accessibility patch that returns `.btn`,
+  `.input`/`.textarea`/`.select`, `.tab` and `.icon-btn` to a `min-height` of `2.75rem` (44px)
+  from the `2.625rem` (42px) that 2.0.0's shape pass introduced. This is an improvement Kenaz
+  inherits for free — and it does not disturb Kenaz's own rules, which already sit at or above
+  the floor (`.tab` is `3.25rem`, `.history-row .icon-btn` is `2.75rem`).
+- **The shape pass itself.** 2.0.0 restyled components deliberately; going from 1.0.0 skips
+  straight past it.
+
+Kenaz is live and installed, so the upgrade needs a real visual pass across all four screens
+before it ships rather than an assumption of safety.
 
 ## Application
 
@@ -349,7 +361,7 @@ Two, so two commits — **and the order matters**:
    worker cache bump.
 
 Running extract before the palette exists in workbench produces a silent failure, not an error:
-Kenaz gets design-system 2.0.1 without `kenaz.css`, `data-palette="kenaz"` matches no rule, and
+Kenaz gets design-system 2.0.2 without `kenaz.css`, `data-palette="kenaz"` matches no rule, and
 the app quietly falls back to the default slate accent while looking otherwise upgraded. Confirm
 `Kenaz.Web/public/design-system/tokens/palettes/kenaz.css` exists after extract before going any
 further.

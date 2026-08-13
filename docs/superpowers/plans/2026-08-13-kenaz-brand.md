@@ -4,7 +4,7 @@
 
 **Goal:** Give Kenaz a logo, palette, typographic voice and public face, with the palette living in the shared design-system rather than as a local fork.
 
-**Architecture:** The brand lands as an opt-in design-system palette (`data-palette="kenaz"`) composed with the existing `fraunces` type skin, which requires first upgrading Kenaz from design-system 1.0.0 to 2.0.1. The mark is authored as SVG and rasterised to PNG by a single PowerShell generator driving headless Edge. Nothing in the app's behaviour, storage or domain logic changes.
+**Architecture:** The brand lands as an opt-in design-system palette (`data-palette="kenaz"`) composed with the existing `fraunces` type skin, which requires first upgrading Kenaz from design-system 1.0.0 to 2.0.2. The mark is authored as SVG and rasterised to PNG by a single PowerShell generator driving headless Edge. Nothing in the app's behaviour, storage or domain logic changes.
 
 **Tech Stack:** Vanilla JS (MVC), Vite 5, Vitest 2, Biome, the workbench design-system, PowerShell 7 + headless Edge for asset generation.
 
@@ -15,7 +15,7 @@
 - **Ink on amber:** `--on-accent: #241704`.
 - **Page background stays `#000000`**, as do the manifest's `theme_color` and `background_color`. All generated icon grounds are `#000000` so the icon tile and Android splash agree.
 - **Service worker cache key:** `kenaz-v1` → `kenaz-v2`, exactly once, in Task 2.
-- **Design-system target version:** 2.0.1. Never edit design-system files inside the Kenaz repo; never hand-prune the extracted tree.
+- **Design-system target version:** 2.0.2. Never edit design-system files inside the Kenaz repo; never hand-prune the extracted tree.
 - **Public copy:** the words **"encrypted"** and **"secure"** are barred from OG tags, repo description, banner and README lead. Claim device-locality only.
 - **No email address** appears in the README.
 - **Never run `npm run format`** repo-wide — it rewrites CRLF to LF across `public/design-system/**`. Format only touched files.
@@ -167,7 +167,7 @@ git commit -m "feat(design-system): add the Kenaz brand palette"
 
 ---
 
-### Task 2: Upgrade Kenaz to design-system 2.0.1 and bump the cache
+### Task 2: Upgrade Kenaz to design-system 2.0.2 and bump the cache
 
 **Repo:** kenaz. **Requires Task 1 committed.**
 
@@ -177,7 +177,7 @@ git commit -m "feat(design-system): add the Kenaz brand palette"
 
 **Interfaces:**
 - Consumes: `[data-palette="kenaz"]` from Task 1.
-- Produces: design-system 2.0.1 in `Kenaz.Web/public/design-system/`, including `tokens/palettes/kenaz.css`, the `fraunces` type skin, and `assets/fonts/`.
+- Produces: design-system 2.0.2 in `Kenaz.Web/public/design-system/`, including `tokens/palettes/kenaz.css`, the `fraunces` type skin, and `assets/fonts/`.
 
 - [ ] **Step 1: Branch, and confirm the design-system tree is clean**
 
@@ -200,7 +200,7 @@ node tools/extract.mjs design-system "C:\Users\Nugget\Documents\Development\GitH
 Expected output:
 
 ```
-extract: design-system → C:\Users\Nugget\Documents\Development\GitHub\repos\kenaz\Kenaz.Web\public  [synced v2.0.1]
+extract: design-system → C:\Users\Nugget\Documents\Development\GitHub\repos\kenaz\Kenaz.Web\public  [synced v2.0.2]
 ```
 
 The target argument is the **parent** directory — extract appends the library name itself.
@@ -216,7 +216,7 @@ node -e "const fs=require('fs');const d='Kenaz.Web/public/design-system';console
 Expected output:
 
 ```
-VERSION: 2.0.1
+VERSION: 2.0.2
 kenaz palette: true
 fraunces skin: true
 fraunces woff2: true
@@ -250,7 +250,7 @@ Expected: build completes with no errors; 48 tests pass. No domain code changed,
 
 ```bash
 git add Kenaz.Web/public/design-system Kenaz.Web/public/sw.js
-git commit -m "build(brand): upgrade design-system 1.0.0 to 2.0.1 and bump the SW cache"
+git commit -m "build(brand): upgrade design-system 1.0.0 to 2.0.2 and bump the SW cache"
 ```
 
 ---
