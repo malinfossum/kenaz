@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readFileSync, statSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, test } from "vitest"
@@ -62,5 +62,33 @@ describe("svg sources", () => {
 
 	test("the banner asks for Fraunces", () => {
 		expect(read(repo, "docs/brand/banner.svg")).toContain("Fraunces")
+	})
+})
+
+describe("generated raster assets", () => {
+	const sizes = {
+		"public/icons/icon-32.png": 200,
+		"public/icons/icon-192.png": 1000,
+		"public/icons/icon-512.png": 3000,
+		"public/icons/icon-maskable-512.png": 3000,
+		"public/og.png": 20000,
+	}
+
+	for (const [rel, min] of Object.entries(sizes)) {
+		test(`${rel} exists and is not a blank stub`, () => {
+			const p = join(web, rel)
+			expect(existsSync(p)).toBe(true)
+			expect(statSync(p).size).toBeGreaterThan(min)
+		})
+	}
+
+	test("the banner PNG is generated", () => {
+		const p = join(repo, "docs/brand/banner.png")
+		expect(existsSync(p)).toBe(true)
+		expect(statSync(p).size).toBeGreaterThan(20000)
+	})
+
+	test("the old hand-rolled PNG encoder is retired", () => {
+		expect(existsSync(join(web, "scripts/generate-icons.mjs"))).toBe(false)
 	})
 })
