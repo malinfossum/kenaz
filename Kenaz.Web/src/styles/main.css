@@ -17,8 +17,7 @@
 }
 
 .brand {
-	font-weight: 700;
-	letter-spacing: -0.02em;
+	font-family: var(--font-display);
 	font-size: var(--text-lg);
 }
 
@@ -167,18 +166,6 @@
 	font-variant-numeric: tabular-nums;
 	color: var(--text-muted);
 	font-size: var(--text-sm);
-}
-
-/* Setup screen */
-.setup {
-	min-height: 70vh;
-	display: grid;
-	place-items: center;
-	padding: var(--space-5);
-}
-
-.setup .card {
-	width: min(100%, 28rem);
 }
 
 /* Wider screens: a touch more breathing room (mobile-first; min-width only) */
