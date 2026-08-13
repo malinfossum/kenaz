@@ -19,7 +19,8 @@
 - **Public copy:** the words **"encrypted"** and **"secure"** are barred from OG tags, repo description, banner and README lead. Claim device-locality only.
 - **No email address** appears in the README.
 - **Never run `npm run format`** repo-wide — it rewrites CRLF to LF across `public/design-system/**`. Format only touched files.
-- **Commits:** no `Co-Authored-By` trailer, no Claude attribution. Each task is one commit. Commits need Malin's go-ahead; **pushing is done from GitHub Desktop only**.
+- **Commits:** no `Co-Authored-By` trailer, no Claude attribution. Each task is one commit, made as part of that task, on the `feat/brand` branch. **Nothing is ever pushed** — pushing is done from GitHub Desktop only, by Malin. (Adjudicated 2026-08-13: Malin's standing "ask before committing" rule is satisfied by branch isolation here, since nothing reaches `main` or any remote without her.)
+- **Duplicated mark geometry is deliberate.** The small mark's paths appear both in `docs/brand/mark-small.svg` and as DOM nodes in `brandMark()` in `src/view/view.js`. Adjudicated 2026-08-13: accepted rather than single-sourced, because the alternative (`?raw` + `DOMParser`) buys little for five path strings on a logo that will rarely change. **Both files must carry a comment pointing at the other.** This is a recorded decision, not an oversight — do not flag it as a DRY defect.
 - **Two repos, strict order:** workbench (Task 1) lands before the Kenaz extract (Task 2).
 
 ## File Structure
@@ -464,10 +465,15 @@ Create `docs/brand/mark.svg`:
 
 - [ ] **Step 4: Create the small mark**
 
-Create `docs/brand/mark-small.svg`. The strokes go to 4 and the opacities rise, because at 32px the master's 1.7-unit hairlines resolve to roughly 0.5px and vanish. The veins come out entirely — they are unreadable at this size and only muddy the flame:
+Create `docs/brand/mark-small.svg`. The strokes go to 4 and the opacities rise, because at 32px the master's 1.7-unit hairlines resolve to roughly 0.5px and vanish. The veins come out entirely — they are unreadable at this size and only muddy the flame.
+
+The XML comment is required, not optional: this geometry is deliberately duplicated in `brandMark()` in `src/view/view.js`, and the two must be kept in step.
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Kenaz">
+	<!-- Also transcribed as DOM nodes in brandMark() in src/view/view.js.
+	     Change one, change the other. Duplication accepted deliberately —
+	     see the plan's Global Constraints. -->
 	<circle cx="50" cy="50" r="44" fill="none" stroke="#d99a4e" stroke-width="4" opacity="0.45"/>
 	<path d="M24 85 Q50 79 76 85" fill="none" stroke="#d99a4e" stroke-width="4" opacity="0.55" stroke-linecap="round"/>
 	<path d="M46.5 18 Q50 12 53.5 18 C 62 32, 71 43, 71 53 C 71 64, 61.5 71, 50 71 C 38.5 71, 29 64, 29 53 C 29 43, 38 32, 46.5 18 Z" fill="#d99a4e"/>
@@ -844,8 +850,15 @@ Add this helper directly above `renderShell`:
 ```js
 // Decorative: the adjacent "Kenaz" text is already the accessible name, so a
 // role/aria-label here would make a screen reader say "Kenaz Kenaz".
-// This is the thick-stroke variant (docs/brand/mark-small.svg) — at ~24px the
-// master's 1.7-unit strokes resolve to under half a pixel and disappear.
+//
+// This is the thick-stroke variant — at ~24px the master's 1.7-unit strokes
+// resolve to under half a pixel and disappear.
+//
+// The geometry is duplicated from docs/brand/mark-small.svg, which the icon
+// generator rasterises. Change one, change the other. The duplication is a
+// deliberate, recorded decision, not an oversight: single-sourcing it would
+// mean a ?raw import reaching out of Kenaz.Web, for five path strings on a
+// logo that will rarely change.
 function brandMark() {
 	return svgEl(
 		"svg",
