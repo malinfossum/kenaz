@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Kenaz — bring it into the light">
+	<rect width="1280" height="640" fill="#0b0a09"/>
+	<g fill="#d99a4e">
+		<circle cx="640" cy="250" r="330" opacity="0.05"/>
+		<circle cx="640" cy="210" r="200" opacity="0.055"/>
+		<circle cx="640" cy="188" r="110" opacity="0.06"/>
+	</g>
+	<path d="M0 640 L0 566 L42 512 L84 566 L126 528 L168 486 L210 540 L252 566 L294 516 L336 552 L378 500 L420 546 L462 566 L504 524 L546 558 L588 508 L630 550 L672 492 L714 540 L756 566 L798 518 L840 554 L882 504 L924 546 L966 566 L1008 514 L1050 550 L1092 498 L1134 542 L1176 566 L1218 516 L1260 552 L1280 530 L1280 640 Z" fill="#1a130c"/>
+	<rect x="34" y="34" width="1212" height="572" rx="22" fill="none" stroke="#d99a4e" stroke-width="1.2" opacity="0.26"/>
+	<text x="78" y="92" font-family="Segoe UI, system-ui, sans-serif" font-size="23" fill="#8f8578" letter-spacing="1.5">malinfossum</text>
+	<text x="1202" y="92" text-anchor="end" font-family="Segoe UI, system-ui, sans-serif" font-size="23" fill="#d99a4e" letter-spacing="1.5" opacity="0.85">Local-first · Android PWA</text>
+	<g transform="translate(576,124) scale(1.28)">
+		<circle cx="50" cy="50" r="44" fill="none" stroke="#d99a4e" stroke-width="1.7" opacity="0.34"/>
+		<path d="M24 85 Q50 79 76 85" fill="none" stroke="#d99a4e" stroke-width="1.7" opacity="0.46" stroke-linecap="round"/>
+		<path d="M46.5 18 Q50 12 53.5 18 C 62 32, 71 43, 71 53 C 71 64, 61.5 71, 50 71 C 38.5 71, 29 64, 29 53 C 29 43, 38 32, 46.5 18 Z" fill="#d99a4e"/>
+		<g fill="none" stroke="#f6e7cb" stroke-linecap="round">
+			<path d="M50 68 L50 17" stroke-width="2" opacity="0.9"/>
+			<path d="M50 46 L41 37" stroke-width="1.5" opacity="0.6"/>
+			<path d="M50 55 L59 46" stroke-width="1.5" opacity="0.6"/>
+		</g>
+		<rect x="32" y="74" width="36" height="7" rx="3.5" fill="#d99a4e"/>
+		<rect x="44.5" y="83" width="11" height="9" rx="5" fill="#d99a4e"/>
+	</g>
+	<text x="640" y="378" text-anchor="middle" font-family="Fraunces, Palatino Linotype, Georgia, serif" font-weight="600" font-size="104" fill="#f4efe6">Kenaz</text>
+	<rect x="588" y="408" width="104" height="2" rx="1" fill="#d99a4e"/>
+	<text x="640" y="456" text-anchor="middle" font-family="Fraunces, Palatino Linotype, Georgia, serif" font-style="italic" font-size="31" fill="#b8ada0">Bring it into the light</text>
+</svg>

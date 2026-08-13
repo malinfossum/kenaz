@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Kenaz">
+	<circle cx="50" cy="50" r="44" fill="none" stroke="#d99a4e" stroke-width="1.7" opacity="0.32"/>
+	<path d="M24 85 Q50 79 76 85" fill="none" stroke="#d99a4e" stroke-width="1.7" opacity="0.45" stroke-linecap="round"/>
+	<path d="M46.5 18 Q50 12 53.5 18 C 62 32, 71 43, 71 53 C 71 64, 61.5 71, 50 71 C 38.5 71, 29 64, 29 53 C 29 43, 38 32, 46.5 18 Z" fill="#d99a4e"/>
+	<g fill="none" stroke="#f6e7cb" stroke-linecap="round">
+		<path d="M50 68 L50 17" stroke-width="2" opacity="0.9"/>
+		<path d="M50 46 L41 37" stroke-width="1.5" opacity="0.6"/>
+		<path d="M50 55 L59 46" stroke-width="1.5" opacity="0.6"/>
+	</g>
+	<rect x="32" y="74" width="36" height="7" rx="3.5" fill="#d99a4e"/>
+	<rect x="44.5" y="83" width="11" height="9" rx="5" fill="#d99a4e"/>
+</svg>
