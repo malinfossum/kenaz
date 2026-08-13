@@ -10,7 +10,8 @@
 -->
 <script>
 	(function () {
-		var saved = localStorage.getItem("theme");
-		document.documentElement.dataset.theme = saved || "dark";
+		var root = document.documentElement;
+		root.dataset.theme = localStorage.getItem("theme") || "dark";
+		root.dataset.palette = localStorage.getItem("palette") || "default";
 	})();
 </script>

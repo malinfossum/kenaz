@@ -1,3 +1,4 @@
+/* workbench-lib: design-system v2.0.2 — extracted; edit in the workbench, not here */
 @import url("./colors.css");
 @import url("./spacing.css");
 @import url("./radius.css");
@@ -5,3 +6,5 @@
 @import url("./motion.css");
 @import url("./shadows.css");
 @import url("./layers.css");
+/* palettes last: they override colour AND type tokens, so must win the cascade */
+@import url("./palettes/index.css");
