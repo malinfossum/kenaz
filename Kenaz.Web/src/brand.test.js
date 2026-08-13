@@ -42,3 +42,25 @@ describe("palette wiring", () => {
 		expect(read(web, "public/sw.js")).toContain('const CACHE = "kenaz-v2"')
 	})
 })
+
+describe("svg sources", () => {
+	test("all three sources exist", () => {
+		for (const f of ["mark.svg", "mark-small.svg", "banner.svg"]) {
+			expect(existsSync(join(repo, "docs/brand", f))).toBe(true)
+		}
+	})
+
+	test("the master mark carries the leaf veins", () => {
+		expect(read(repo, "docs/brand/mark.svg")).toContain("#f6e7cb")
+	})
+
+	test("the small mark drops the veins and thickens the strokes", () => {
+		const svg = read(repo, "docs/brand/mark-small.svg")
+		expect(svg).not.toContain("#f6e7cb")
+		expect(svg).toContain('stroke-width="4"')
+	})
+
+	test("the banner asks for Fraunces", () => {
+		expect(read(repo, "docs/brand/banner.svg")).toContain("Fraunces")
+	})
+})
