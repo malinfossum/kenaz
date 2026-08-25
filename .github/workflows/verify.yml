@@ -6,6 +6,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Least privilege: this job only reads the tree to run dotnet test. Without an
+# explicit block the GITHUB_TOKEN gets the repo default, which is far wider than
+# any step here needs.
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: windows-latest
