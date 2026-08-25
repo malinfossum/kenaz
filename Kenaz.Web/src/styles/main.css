@@ -12,8 +12,33 @@
 .app-header {
 	display: flex;
 	align-items: center;
+	gap: var(--space-3);
 	padding: var(--space-4);
 	border-bottom: 1px solid var(--line);
+}
+
+/* Lantern mark. Colour lives here rather than on the SVG so it follows the
+   theme — the accent is re-tuned for light mode by the palette. */
+.brand-mark {
+	width: 1.75rem;
+	height: 1.75rem;
+	flex: none;
+}
+
+.brand-mark .mark-frame {
+	stroke: var(--accent);
+}
+
+.brand-mark .mark-flame {
+	fill: var(--accent-strong);
+}
+
+.brand-mark .mark-core {
+	fill: var(--text);
+}
+
+.brand-mark .mark-cap {
+	stroke: var(--accent-strong);
 }
 
 .brand {

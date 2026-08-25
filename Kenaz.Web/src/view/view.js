@@ -4,7 +4,7 @@
    NO state mutation, NO fetch. User text reaches the DOM only through el().
    ====================================================================== */
 
-import { el, clear } from "../utils/dom.js"
+import { el, svgEl, clear } from "../utils/dom.js"
 import { renderToday } from "./screens/today.js"
 import { renderHistory } from "./screens/history.js"
 import { renderReview } from "./screens/review.js"
@@ -111,9 +111,48 @@ export function createView(root) {
 	}
 }
 
+// The Lantern mark: a faceted frame around a flame. Decorative — the adjacent
+// "Kenaz" text is already the accessible name, so a role or aria-label here
+// would make a screen reader say "Kenaz Kenaz".
+//
+// This is the compact variant (docs/brand/mark-small.svg): heavier strokes and
+// no inner detail, because at ~24px the master's fine work resolves to under a
+// pixel and disappears. Geometry is duplicated from that file rather than
+// imported — a ?raw import would reach out of Kenaz.Web for five path strings
+// on a logo that rarely changes. Change one, change the other.
+//
+// Colour comes from CSS (.brand-mark in main.css), not from fill/stroke
+// attributes, so the mark follows the light theme. var() does not work in a
+// presentation attribute, only in a stylesheet.
+function brandMark() {
+	return svgEl(
+		"svg",
+		{ class: "brand-mark", viewBox: "0 0 512 512", "aria-hidden": "true" },
+		svgEl("path", {
+			class: "mark-frame",
+			d: "M256 84 L392 164 V340 L256 430 L120 340 V164 Z",
+			fill: "none",
+			"stroke-width": "26",
+			"stroke-linejoin": "miter",
+		}),
+		svgEl("path", {
+			class: "mark-flame",
+			d: "M256 158 C304 220 307 267 285 305 C275 322 265 335 256 344 C247 335 237 322 227 305 C205 267 208 220 256 158 Z",
+		}),
+		svgEl("path", {
+			class: "mark-core",
+			d: "M256 218 C278 248 281 271 270 292 C265 302 260 310 256 315 C252 310 247 302 242 292 C231 271 234 248 256 218 Z",
+		}),
+		svgEl("path", { class: "mark-cap", d: "M220 86 H292", "stroke-width": "22" }),
+		svgEl("path", { class: "mark-cap", d: "M220 428 H292", "stroke-width": "22" })
+	)
+}
+
 function renderShell(state) {
 	const frag = document.createDocumentFragment()
-	frag.append(el("header", { class: "app-header" }, el("span", { class: "brand" }, "Kenaz")))
+	frag.append(
+		el("header", { class: "app-header" }, brandMark(), el("span", { class: "brand" }, "Kenaz"))
+	)
 	if (state.notice) frag.append(renderNotice(state.notice))
 
 	const screen = el("div", { class: "screen", "data-screen": "", tabindex: "-1" })
