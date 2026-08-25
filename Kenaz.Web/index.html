@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-palette="kenaz" data-typeskin="fraunces">
+<html lang="en" data-palette="kenaz">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,7 +9,20 @@
 		<!-- PWA: installable standalone app (relative hrefs work under any base path) -->
 		<link rel="manifest" href="manifest.webmanifest" />
 		<meta name="theme-color" content="#000000" />
-		<link rel="apple-touch-icon" href="icons/icon-192.png" />
+		<link rel="icon" href="icons/favicon.ico" sizes="any" />
+		<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+		<link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" />
+
+		<!-- Social preview. og:image and og:url must be absolute: crawlers do not
+		     reliably resolve relative paths and report them as unreachable. -->
+		<meta property="og:title" content="Kenaz — a private, offline daily wellbeing check-in" />
+		<meta
+			property="og:description"
+			content="Log mood, energy and sleep, and see your patterns over time. Everything stays on your device — no account, no server, works offline."
+		/>
+		<meta property="og:image" content="https://malinfossum.github.io/kenaz/og.png" />
+		<meta property="og:url" content="https://malinfossum.github.io/kenaz/" />
+		<meta property="og:type" content="website" />
 
 		<!-- No-flash theme init: must run BEFORE stylesheets -->
 		<script>
