@@ -1,7 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
-  <title id="title">Kenaz Lantern mark for dark backgrounds</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Kenaz Lantern app icon</title>
   
-  <g transform="translate(0 0) scale(1)">
+  <defs><radialGradient id="appGlow" cx="50%" cy="43%" r="64%"><stop offset="0" stop-color="#7C9AB3" stop-opacity=".13"/><stop offset="1" stop-color="#0A0D10" stop-opacity="0"/></radialGradient></defs>
+   <rect width="1024" height="1024" rx="224" fill="#0A0D10"/>
+   <rect width="1024" height="1024" rx="224" fill="url(#appGlow)"/>
+   <g transform="translate(128 128) scale(1.5)">
     <path d="M256 70 L392 150 V344 L256 442 L120 344 V150 Z" fill="#11161B" stroke="#313C48" stroke-width="16" stroke-linejoin="miter"/>
     <path d="M256 92 L368 158 L312 208 L200 208 L144 158 Z" fill="#7C9AB3" opacity="0.36"/>
     <path d="M144 158 L200 208 L200 326 L144 358 Z" fill="#7C9AB3" opacity="0.56"/>
