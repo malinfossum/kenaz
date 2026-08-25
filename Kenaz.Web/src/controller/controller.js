@@ -138,7 +138,11 @@ export function createController({ model, view }) {
 			const result = merge(existing, records)
 			await store.putMany(result.records)
 			await refresh()
-			const parts = [`${result.added} added`, `${result.updated} updated`, `${result.unchanged} unchanged`]
+			const parts = [
+				`${result.added} added`,
+				`${result.updated} updated`,
+				`${result.unchanged} unchanged`,
+			]
 			if (skipped > 0) parts.push(`${skipped} skipped`)
 			model.setDataResult(`Import done — ${parts.join(", ")}.`)
 			view.announce("Import complete.")

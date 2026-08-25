@@ -21,8 +21,12 @@ test("rejects sleep negative / over 24", () => {
 	expect(validateCheckIn({ mood: null, energy: null, sleep: 25, note: null })).toMatch(/Sleep/)
 })
 test("rejects all-empty", () => {
-	expect(validateCheckIn({ mood: null, energy: null, sleep: null, note: null })).toMatch(/at least one/)
+	expect(validateCheckIn({ mood: null, energy: null, sleep: null, note: null })).toMatch(
+		/at least one/
+	)
 })
 test("rejects whitespace-only note with no scales", () => {
-	expect(validateCheckIn({ mood: null, energy: null, sleep: null, note: "   " })).toMatch(/at least one/)
+	expect(validateCheckIn({ mood: null, energy: null, sleep: null, note: "   " })).toMatch(
+		/at least one/
+	)
 })

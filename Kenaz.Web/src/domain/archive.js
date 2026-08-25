@@ -10,7 +10,8 @@ export class ImportError extends Error {
 }
 
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k)
-const pick = (obj, pascal, camel) => (has(obj, pascal) ? obj[pascal] : has(obj, camel) ? obj[camel] : undefined)
+const pick = (obj, pascal, camel) =>
+	has(obj, pascal) ? obj[pascal] : has(obj, camel) ? obj[camel] : undefined
 const orNull = (v) => (v === undefined ? null : v)
 
 /** Build the PascalCase export envelope (matches the C# JsonCheckInArchive). */
@@ -39,10 +40,12 @@ export function parseImport(text) {
 	} catch {
 		throw new ImportError("That file isn't a readable Kenaz export.")
 	}
-	if (!doc || typeof doc !== "object") throw new ImportError("That file isn't a readable Kenaz export.")
+	if (!doc || typeof doc !== "object")
+		throw new ImportError("That file isn't a readable Kenaz export.")
 
 	const version = pick(doc, "SchemaVersion", "schemaVersion") ?? 1
-	if (version > SCHEMA_VERSION) throw new ImportError("That export was made by a newer version of Kenaz.")
+	if (version > SCHEMA_VERSION)
+		throw new ImportError("That export was made by a newer version of Kenaz.")
 
 	const list = pick(doc, "CheckIns", "checkIns") ?? []
 	if (!Array.isArray(list)) throw new ImportError("That file isn't a readable Kenaz export.")
