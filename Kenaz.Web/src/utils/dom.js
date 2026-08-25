@@ -37,6 +37,32 @@ export function el(tag, props = {}, ...children) {
 	return node
 }
 
+const SVG_NS = "http://www.w3.org/2000/svg"
+
+/**
+ * Create an SVG element. Same shape as el(), but namespaced and attribute-only:
+ * SVG presentation attributes are not DOM properties, and className on an SVG
+ * element is a read-only SVGAnimatedString, so everything goes through
+ * setAttribute. Children are nodes only — the mark has no text.
+ * @param {string} tag
+ * @param {object} props  attributes, set verbatim
+ * @param {...(Node|null)} children
+ */
+export function svgEl(tag, props = {}, ...children) {
+	const node = document.createElementNS(SVG_NS, tag)
+
+	for (const [key, value] of Object.entries(props)) {
+		if (value == null) continue
+		node.setAttribute(key, value)
+	}
+
+	for (const child of children) {
+		if (child != null) node.append(child)
+	}
+
+	return node
+}
+
 /** Remove all children of a node. */
 export function clear(node) {
 	node.replaceChildren()
