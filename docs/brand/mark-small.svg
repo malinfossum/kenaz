@@ -1,10 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Kenaz">
-	<!-- Also transcribed as DOM nodes in brandMark() in src/view/view.js.
-	     Change one, change the other. Duplication accepted deliberately —
-	     see the plan's Global Constraints. -->
-	<circle cx="50" cy="50" r="44" fill="none" stroke="#d99a4e" stroke-width="4" opacity="0.45"/>
-	<path d="M24 85 Q50 79 76 85" fill="none" stroke="#d99a4e" stroke-width="4" opacity="0.55" stroke-linecap="round"/>
-	<path d="M46.5 18 Q50 12 53.5 18 C 62 32, 71 43, 71 53 C 71 64, 61.5 71, 50 71 C 38.5 71, 29 64, 29 53 C 29 43, 38 32, 46.5 18 Z" fill="#d99a4e"/>
-	<rect x="32" y="74" width="36" height="7" rx="3.5" fill="#d99a4e"/>
-	<rect x="44.5" y="83" width="11" height="9" rx="5" fill="#d99a4e"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Kenaz compact Lantern mark for dark backgrounds</title>
+  
+  <g transform="translate(0 0) scale(1)">
+      <path d="M256 84 L392 164 V340 L256 430 L120 340 V164 Z" fill="none" stroke="#7C9AB3" stroke-width="26" stroke-linejoin="miter"/>
+      <path d="M256 158 C304 220 307 267 285 305 C275 322 265 335 256 344 C247 335 237 322 227 305 C205 267 208 220 256 158 Z" fill="#90ADC5"/>
+      <path d="M256 218 C278 248 281 271 270 292 C265 302 260 310 256 315 C252 310 247 302 242 292 C231 271 234 248 256 218 Z" fill="#F4F7FA"/>
+      <path d="M220 86 H292" stroke="#90ADC5" stroke-width="22"/>
+      <path d="M220 428 H292" stroke="#90ADC5" stroke-width="22"/>
+    </g>
 </svg>
