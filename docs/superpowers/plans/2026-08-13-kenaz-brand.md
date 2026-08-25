@@ -1220,9 +1220,11 @@ Ignore its *missing call-to-action* and *missing headline in image* warnings —
 
 - [ ] **Step 7: Final on-device gate**
 
-Open the installed PWA on the Nothing Phone. Confirm the new torch icon appears on the home screen **and** the app itself is warm amber rather than slate.
+Open the installed PWA on the Nothing Phone. Confirm the new **Lantern** icon appears on the home screen **and** the app header shows the lantern mark beside the wordmark.
 
-The palette is the real test. The icon could refresh for unrelated reasons, but a warm palette proves the service-worker cache bump flushed the old design-system CSS — the failure this slice is most exposed to. If the app still looks slate, the cache did not roll: uninstall and reinstall, then investigate `sw.js`.
+> **Revised 2026-08-25.** This step originally asked you to confirm the app looked *warm amber*. That was the retired palette. The brand pack settled on the **Lantern** identity — cool blue-grey (`#7C9AB3`) on true black — so amber is now the *failure* signal, not the success one.
+
+The header mark is the real test. The icon could refresh for unrelated reasons, but a lantern in the header proves the service-worker cache bump flushed the old shell and CSS — the failure this slice is most exposed to. If there is no mark in the header, the cache did not roll: uninstall and reinstall, then investigate `sw.js`.
 
 While you are there: import `%APPDATA%\Kenaz\checkins.backup-20260609-085650.json` on the Data tab. It holds your single check-in from 2026-05-27 and should report **1 added**, which also exercises the merge path with a non-empty file for the first time.
 
