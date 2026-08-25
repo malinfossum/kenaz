@@ -22,4 +22,3 @@ Thumbs.db
 .superpowers/
 
 # Web app build output (derived from Kenaz.Web — never source)
-Kenaz.Api/wwwroot/
