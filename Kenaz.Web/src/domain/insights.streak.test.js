@@ -6,8 +6,14 @@ const NOW = new Date(2026, 4, 22, 9, 0, 0) // local 2026-05-22 09:00
 const TODAY = "2026-05-22"
 const back = (n) => addDaysIso(TODAY, -n)
 const rec = (date, fields = {}) => ({
-	date, mood: null, energy: null, sleep: null, note: null,
-	createdAt: "2026-05-22T09:00:00Z", updatedAt: "2026-05-22T09:00:00Z", ...fields,
+	date,
+	mood: null,
+	energy: null,
+	sleep: null,
+	note: null,
+	createdAt: "2026-05-22T09:00:00Z",
+	updatedAt: "2026-05-22T09:00:00Z",
+	...fields,
 })
 
 // averages skip nulls, return null on empty

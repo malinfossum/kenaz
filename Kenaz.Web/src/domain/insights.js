@@ -1,4 +1,10 @@
-import { MIN_DAYS_PER_BUCKET, PATTERN_DAYS, SLEEP_THRESHOLD, TEASER_GAP, WEEK_DAYS } from "./constants.js"
+import {
+	MIN_DAYS_PER_BUCKET,
+	PATTERN_DAYS,
+	SLEEP_THRESHOLD,
+	TEASER_GAP,
+	WEEK_DAYS,
+} from "./constants.js"
 import { addDaysIso, todayIso, withinWindow } from "./dates.js"
 
 /** Mean of an array of numbers; null on empty. Caller filters out null fields first. */
@@ -68,7 +74,9 @@ export function worstDay(checkIns, now) {
 
 /** 30-day sleep→mood comparison, bucketed at SLEEP_THRESHOLD (inclusive long side). */
 export function sleepMoodPattern(checkIns, now) {
-	const qualified = windowed(checkIns, now, PATTERN_DAYS).filter((c) => c.mood != null && c.sleep != null)
+	const qualified = windowed(checkIns, now, PATTERN_DAYS).filter(
+		(c) => c.mood != null && c.sleep != null
+	)
 	const long = qualified.filter((c) => c.sleep >= SLEEP_THRESHOLD)
 	const short = qualified.filter((c) => c.sleep < SLEEP_THRESHOLD)
 	return {

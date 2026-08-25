@@ -73,10 +73,19 @@ export function renderCheckInForm({
 						{ class: "cluster" },
 						el(
 							"button",
-							{ class: "btn btn-danger", type: "button", "data-action": "delete-checkin", dataset: { date } },
+							{
+								class: "btn btn-danger",
+								type: "button",
+								"data-action": "delete-checkin",
+								dataset: { date },
+							},
 							"Delete"
 						),
-						el("button", { class: "btn btn-ghost", type: "button", "data-action": "cancel-delete" }, "Cancel")
+						el(
+							"button",
+							{ class: "btn btn-ghost", type: "button", "data-action": "cancel-delete" },
+							"Cancel"
+						)
 					)
 				)
 			: el(
@@ -84,12 +93,21 @@ export function renderCheckInForm({
 					{ class: "cluster" },
 					el("button", { class: "btn btn-primary", type: "submit" }, checkIn ? "Update" : "Save"),
 					showCancel
-						? el("button", { class: "btn btn-ghost", type: "button", "data-action": "cancel-edit" }, "Cancel")
+						? el(
+								"button",
+								{ class: "btn btn-ghost", type: "button", "data-action": "cancel-edit" },
+								"Cancel"
+							)
 						: null,
 					showDelete
 						? el(
 								"button",
-								{ class: "btn btn-danger", type: "button", "data-action": "ask-delete", dataset: { date } },
+								{
+									class: "btn btn-danger",
+									type: "button",
+									"data-action": "ask-delete",
+									dataset: { date },
+								},
 								"Delete"
 							)
 						: null

@@ -34,11 +34,7 @@ export function renderHistory(state) {
 		)
 	}
 
-	const list = el(
-		"ul",
-		{ class: "history-list" },
-		...state.checkIns.map((c) => renderRow(c))
-	)
+	const list = el("ul", { class: "history-list" }, ...state.checkIns.map((c) => renderRow(c)))
 	return el("div", { class: "stack" }, el("h1", {}, "History"), list)
 }
 

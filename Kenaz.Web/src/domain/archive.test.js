@@ -2,12 +2,21 @@ import { expect, test } from "vitest"
 import { ImportError, parseImport, toExportDocument } from "./archive.js"
 
 const rec = (date, fields = {}) => ({
-	date, mood: null, energy: null, sleep: null, note: null,
-	createdAt: "2026-05-22T08:00:00+00:00", updatedAt: "2026-05-22T20:00:00+00:00", ...fields,
+	date,
+	mood: null,
+	energy: null,
+	sleep: null,
+	note: null,
+	createdAt: "2026-05-22T08:00:00+00:00",
+	updatedAt: "2026-05-22T20:00:00+00:00",
+	...fields,
 })
 
 test("export writes a PascalCase, schemaVersion-1 envelope", () => {
-	const doc = toExportDocument([rec("2026-05-22", { mood: 7, sleep: 7.5, note: "ok" })], new Date(Date.UTC(2026, 4, 24)))
+	const doc = toExportDocument(
+		[rec("2026-05-22", { mood: 7, sleep: 7.5, note: "ok" })],
+		new Date(Date.UTC(2026, 4, 24))
+	)
 	expect(doc.SchemaVersion).toBe(1)
 	expect(doc.CheckIns[0]).toMatchObject({ Date: "2026-05-22", Mood: 7, Sleep: 7.5, Note: "ok" })
 	expect(doc.CheckIns[0].CreatedAt).toBe("2026-05-22T08:00:00+00:00")
@@ -57,7 +66,8 @@ test("import rejects unreadable JSON", () => {
 	expect(() => parseImport("not json")).toThrow(/readable Kenaz export/)
 })
 test("import does not let __proto__ pollute records", () => {
-	const text = '{"SchemaVersion":1,"CheckIns":[{"Date":"2026-05-22","Mood":5,"__proto__":{"polluted":true}}]}'
+	const text =
+		'{"SchemaVersion":1,"CheckIns":[{"Date":"2026-05-22","Mood":5,"__proto__":{"polluted":true}}]}'
 	const { records } = parseImport(text)
 	expect(records[0].polluted).toBeUndefined()
 	expect({}.polluted).toBeUndefined()

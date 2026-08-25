@@ -2,8 +2,13 @@ import { expect, test } from "vitest"
 import { merge } from "./merge.js"
 
 const rec = (date, mood, updatedAt) => ({
-	date, mood, energy: null, sleep: null, note: null,
-	createdAt: "2026-05-22T09:00:00+00:00", updatedAt,
+	date,
+	mood,
+	energy: null,
+	sleep: null,
+	note: null,
+	createdAt: "2026-05-22T09:00:00+00:00",
+	updatedAt,
 })
 
 test("adds check-ins for new dates", () => {
