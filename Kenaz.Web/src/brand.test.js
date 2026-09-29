@@ -197,7 +197,7 @@ describe("social metadata", () => {
 describe("readme", () => {
 	test("it leads with the banner, carrying real alt text", () => {
 		expect(read(repo, "README.md")).toContain(
-			"![Kenaz — bring it into the light](docs/brand/banner.png)"
+			"![Kenaz: bring it into the light](docs/brand/banner.png)"
 		)
 	})
 
