@@ -4,7 +4,7 @@ Module-based MVC starter, Vite + Biome. Use this for personal projects and anyth
 
 ## What's included
 
-- Full design system (`design-system/`) — tokens, primitives, components, compositions, utilities, theme
+- Full design system (`design-system/`): tokens, primitives, components, compositions, utilities, theme
 - No-flash dark/light theme toggle (works on first load, persists in `localStorage`)
 - Mobile-first responsive baseline
 - Accessibility defaults (focus rings, reduced-motion, forced-colors, skip link)
@@ -33,11 +33,11 @@ npm run check          # format + lint + organize imports (write changes)
 
 ## Folder layout
 
-- `index.html` — app shell, contains `<main id="main">`
-- `src/main.js` — boots the app
-- `src/app.js` — wires `createModel` / `createView` / `createController`
-- `src/model/`, `src/view/`, `src/controller/` — MVC layers
-- `src/styles/main.css` — project-specific overrides
-- `design-system/` — read-only foundation, do not edit
-- `biome.json` — formatter and linter config
-- `vite.config.js` — Vite config
+- `index.html`: app shell, contains `<main id="main">`
+- `src/main.js`: boots the app
+- `src/app.js`: wires `createModel` / `createView` / `createController`
+- `src/model/`, `src/view/`, `src/controller/`: MVC layers
+- `src/styles/main.css`: project-specific overrides
+- `design-system/`: read-only foundation, do not edit
+- `biome.json`: formatter and linter config
+- `vite.config.js`: Vite config
