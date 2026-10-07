@@ -4,11 +4,11 @@ using Kenaz.Core;
 var builder = WebApplication.CreateBuilder(args);
 
 // Config seam — defaults to the real locations, overridable by tests and manual runs.
-var dbPath    = builder.Configuration["Kenaz:DbPath"]    ?? SqliteCheckInRepository.DefaultFilePath();
+var dbPath = builder.Configuration["Kenaz:DbPath"] ?? SqliteCheckInRepository.DefaultFilePath();
 var tokenPath = builder.Configuration["Kenaz:TokenPath"] ?? TokenStore.DefaultTokenPath();
-var port      = int.TryParse(builder.Configuration["Kenaz:Port"], out var p) ? p : 5247;
+var port = int.TryParse(builder.Configuration["Kenaz:Port"], out var p) ? p : 5247;
 // A known token (tests) skips the file entirely.
-var token     = builder.Configuration["Kenaz:Token"] ?? TokenStore.GetOrCreate(tokenPath);
+var token = builder.Configuration["Kenaz:Token"] ?? TokenStore.GetOrCreate(tokenPath);
 
 // Keep check-in dates (carried in request paths) and bodies out of the logs.
 builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);

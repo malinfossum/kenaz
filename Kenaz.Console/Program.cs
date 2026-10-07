@@ -11,7 +11,7 @@ internal static class Program
         System.Console.OutputEncoding = System.Text.Encoding.UTF8;
 
         var jsonPath = JsonCheckInRepository.DefaultFilePath();
-        var dbPath   = SqliteCheckInRepository.DefaultFilePath();
+        var dbPath = SqliteCheckInRepository.DefaultFilePath();
 
         MigrationOutcome outcome;
         try
