@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url"
 import { describe, expect, test } from "vitest"
 
 const here = dirname(fileURLToPath(import.meta.url))
-export const web = join(here, "..")
-export const repo = join(web, "..")
+const web = join(here, "..")
+const repo = join(web, "..")
 
 const read = (...parts) => readFileSync(join(...parts), "utf8")
 

@@ -5,6 +5,9 @@
 *.cmd text eol=crlf
 *.bat text eol=crlf
 
+# .editorconfig asks for CRLF in C# files
+*.cs text eol=crlf
+
 # Shell scripts must use LF
 *.sh text eol=lf
 

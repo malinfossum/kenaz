@@ -8,7 +8,7 @@ namespace Kenaz.Core;
 /// </summary>
 public interface ICheckInRepository
 {
-    IReadOnlyList<CheckIn> LoadAll();
+    public IReadOnlyList<CheckIn> LoadAll();
 
-    void SaveAll(IReadOnlyList<CheckIn> checkIns);
+    public void SaveAll(IReadOnlyList<CheckIn> checkIns);
 }

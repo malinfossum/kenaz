@@ -133,23 +133,23 @@ public sealed class SqliteCheckInRepository : ICheckInRepository
                 VALUES ($date, $mood, $energy, $sleep, $note, $createdAt, $updatedAt)
                 """;
 
-            var pDate      = insertCmd.Parameters.Add("$date",      SqliteType.Text);
-            var pMood      = insertCmd.Parameters.Add("$mood",      SqliteType.Integer);
-            var pEnergy    = insertCmd.Parameters.Add("$energy",    SqliteType.Integer);
-            var pSleep     = insertCmd.Parameters.Add("$sleep",     SqliteType.Text);
-            var pNote      = insertCmd.Parameters.Add("$note",      SqliteType.Text);
+            var pDate = insertCmd.Parameters.Add("$date", SqliteType.Text);
+            var pMood = insertCmd.Parameters.Add("$mood", SqliteType.Integer);
+            var pEnergy = insertCmd.Parameters.Add("$energy", SqliteType.Integer);
+            var pSleep = insertCmd.Parameters.Add("$sleep", SqliteType.Text);
+            var pNote = insertCmd.Parameters.Add("$note", SqliteType.Text);
             var pCreatedAt = insertCmd.Parameters.Add("$createdAt", SqliteType.Text);
             var pUpdatedAt = insertCmd.Parameters.Add("$updatedAt", SqliteType.Text);
 
             foreach (var c in checkIns)
             {
-                pDate.Value      = c.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                pMood.Value      = (object?)c.Mood ?? DBNull.Value;
-                pEnergy.Value    = (object?)c.Energy ?? DBNull.Value;
-                pSleep.Value     = c.Sleep.HasValue
+                pDate.Value = c.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                pMood.Value = (object?)c.Mood ?? DBNull.Value;
+                pEnergy.Value = (object?)c.Energy ?? DBNull.Value;
+                pSleep.Value = c.Sleep.HasValue
                     ? c.Sleep.Value.ToString(CultureInfo.InvariantCulture)
                     : (object)DBNull.Value;
-                pNote.Value      = (object?)c.Note ?? DBNull.Value;
+                pNote.Value = (object?)c.Note ?? DBNull.Value;
                 pCreatedAt.Value = c.CreatedAt.ToString("o", CultureInfo.InvariantCulture);
                 pUpdatedAt.Value = c.UpdatedAt.ToString("o", CultureInfo.InvariantCulture);
 
